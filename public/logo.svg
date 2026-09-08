@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Fond icône PWA (Indigo Fintech) -->
+  <rect width="1024" height="1024" rx="224" fill="#3B1287"/>
+
+  <!-- Cercle incomplet (C) -->
+  <path d="M 700 350 A 260 260 0 1 0 700 670" 
+        fill="none" 
+        stroke="#FFFFFF" 
+        stroke-width="56" 
+        stroke-linecap="round"/>
+
+  <!-- Courbe ascendante -->
+  <path d="M 330 650 L 450 480 L 550 540 L 730 310" 
+        fill="none" 
+        stroke="#FFFFFF" 
+        stroke-width="56" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Tête de flèche -->
+  <path d="M 670 265 L 800 220 L 755 350 Z" fill="#FFFFFF"/>
+</svg>

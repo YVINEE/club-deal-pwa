@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: 222 47% 11%;
+  --foreground: 210 20% 98%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --border: 217 33% 20%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  /* Zones sûres pour iPhone avec encoche / barre de gestes Android */
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pas de hover state significatif sur mobile : évite les styles "collés" au doigt */
+@media (hover: hover) {
+  .hover-only\:opacity-80:hover {
+    opacity: 0.8;
+  }
+}
