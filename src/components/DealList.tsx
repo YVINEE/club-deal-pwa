@@ -41,7 +41,7 @@ export function DealList({
     <div className="relative min-h-screen pb-20">
       <div className="sticky top-0 bg-background border-b px-4 py-3 flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="" className="h-8 w-8 rounded-lg" />
+          <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" className="h-8 w-8 rounded-lg" />
           <h1 className="font-semibold text-base">Suivi Club Deals</h1>
         </div>
         <div className="flex items-center gap-2">
