@@ -56,6 +56,17 @@ export async function prolongerDeal(dealId: string): Promise<void> {
   await recalculerEcheances(dealId);
 }
 
+export async function annulerDerniereProlongation(dealId: string): Promise<void> {
+  const data = await lirePortefeuille();
+  const prolongations = data.prolongations.filter((prolongation) => prolongation.dealId === dealId);
+  if (prolongations.length === 0) throw new Error("Aucune prolongation à annuler");
+
+  const derniere = [...prolongations].sort((a, b) => b.ordre - a.ordre)[0];
+  data.prolongations = data.prolongations.filter((prolongation) => prolongation.id !== derniere.id);
+  await enregistrerPortefeuille(data);
+  await recalculerEcheances(dealId);
+}
+
 export async function marquerEcheanceEncaissee(echeanceId: string): Promise<void> {
   const data = await lirePortefeuille();
   const echeance = data.echeances.find((candidate) => candidate.id === echeanceId);

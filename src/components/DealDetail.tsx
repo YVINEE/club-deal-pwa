@@ -36,11 +36,12 @@ export function DealDetail({
   const { deals, supprimer } = useDeals();
   const dealInfo = deals.find((d) => d.deal.id === dealId);
 
-  const { prolongations, prolonger, error: erreurProlongation, refreshKey } = useProlongations(dealId);
+  const { prolongations, prolonger, annulerDerniere, error: erreurProlongation, refreshKey } = useProlongations(dealId);
   const { echeances, loading: chargementEcheances, rafraichir: rafraichirEcheances } = useEcheances(dealId, refreshKey);
 
   const [onglet, setOnglet] = useState<Onglet>("echeances");
   const [confirmationSuppression, setConfirmationSuppression] = useState(false);
+  const [confirmationAnnulation, setConfirmationAnnulation] = useState(false);
 
   if (!dealInfo) {
     return <div className="p-4 text-center text-gray-500">Deal introuvable</div>;
@@ -104,6 +105,7 @@ export function DealDetail({
             prolongations={prolongations}
             statut={statut}
             onProlonger={prolonger}
+            onAnnuler={() => setConfirmationAnnulation(true)}
             erreur={erreurProlongation}
           />
         )}
@@ -133,6 +135,30 @@ export function DealDetail({
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={gererSuppression} className="bg-red-600 text-white">
               Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmationAnnulation} onOpenChange={setConfirmationAnnulation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler la dernière prolongation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              La dernière prolongation sera supprimée. Ses échéances seront recalculées et les éventuels pointages
+              associés à ces échéances seront perdus.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Conserver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                await annulerDerniere();
+                setConfirmationAnnulation(false);
+              }}
+              className="bg-red-600 text-white"
+            >
+              Annuler la prolongation
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

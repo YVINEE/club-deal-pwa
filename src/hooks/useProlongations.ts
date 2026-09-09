@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Prolongation } from "../types";
 import { lirePortefeuille } from "../db/secureStorage";
-import { prolongerDeal } from "../db/repositories";
+import { annulerDerniereProlongation, prolongerDeal } from "../db/repositories";
 
 export function useProlongations(dealId: string) {
   const [prolongations, setProlongations] = useState<Prolongation[]>([]);
@@ -39,5 +39,17 @@ export function useProlongations(dealId: string) {
     }
   }, [dealId, charger]);
 
-  return { prolongations, loading, error, prolonger, refreshKey };
+  const annulerDerniere = useCallback(async () => {
+    setError(null);
+    try {
+      await annulerDerniereProlongation(dealId);
+      await charger();
+      setRefreshKey((k) => k + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur lors de l’annulation");
+      console.error(e);
+    }
+  }, [dealId, charger]);
+
+  return { prolongations, loading, error, prolonger, annulerDerniere, refreshKey };
 }

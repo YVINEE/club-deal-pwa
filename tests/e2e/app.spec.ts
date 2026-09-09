@@ -69,6 +69,31 @@ test("ouvre un deal puis utilise le bouton retour", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Deals", exact: true })).toBeVisible();
 });
 
+test("annule la dernière prolongation après confirmation", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await page.getByRole("button", { name: "Ajouter un deal" }).click();
+
+  const fields = page.locator("form input");
+  await fields.nth(0).fill("Deal Prolongation");
+  await fields.nth(1).fill("2026-01-15");
+  await fields.nth(2).fill("10000");
+  await fields.nth(3).fill("12");
+  await fields.nth(4).fill("12");
+  await fields.nth(5).fill("1");
+  await fields.nth(6).fill("6");
+  await page.getByRole("button", { name: "Créer", exact: true }).click();
+  await page.getByRole("heading", { name: "Deal Prolongation", exact: true }).click();
+  await page.getByRole("button", { name: "Prolongations" }).click();
+  await page.getByRole("button", { name: "Prolonger de 6 mois" }).click();
+  await expect(page.getByText("Prolongation n°1", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Annuler la dernière prolongation" }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Annuler la prolongation" }).click();
+  await expect(page.getByText("Aucune prolongation pour ce deal", { exact: true })).toBeVisible();
+});
+
 test("pointe puis dépointe une échéance", async ({ page }) => {
   await openApp(page);
   await openSettings(page);

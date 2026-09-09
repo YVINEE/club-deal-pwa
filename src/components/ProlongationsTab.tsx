@@ -8,10 +8,11 @@ interface ProlongationsTabProps {
   prolongations: Prolongation[];
   statut: StatutDeal;
   onProlonger: () => Promise<void>;
+  onAnnuler: () => void;
   erreur: string | null;
 }
 
-export function ProlongationsTab({ deal, prolongations, statut, onProlonger, erreur }: ProlongationsTabProps) {
+export function ProlongationsTab({ deal, prolongations, statut, onProlonger, onAnnuler, erreur }: ProlongationsTabProps) {
   const disponible = statut !== "termine" && peutProlonger(deal, prolongations);
 
   return (
@@ -34,6 +35,12 @@ export function ProlongationsTab({ deal, prolongations, statut, onProlonger, err
       <div className="text-sm text-gray-500 text-center">
         {prolongations.length} / {deal.nombreMaxProlongations} prolongation(s) utilisée(s)
       </div>
+
+      {prolongations.length > 0 && (
+        <Button type="button" variant="outline" onClick={onAnnuler} className="h-12">
+          Annuler la dernière prolongation
+        </Button>
+      )}
 
       {erreur && (
         <div className="text-sm text-red-600 bg-red-50 dark:bg-red-950 rounded-lg px-4 py-3 text-center">
