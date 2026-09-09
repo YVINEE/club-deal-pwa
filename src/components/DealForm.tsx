@@ -4,12 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ThemeToggle } from "./ThemeToggle";
 
 interface DealFormProps {
   dealExistant?: Deal;
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
   onSubmit: (deal: Deal) => Promise<void>;
   onAnnuler: () => void;
 }
@@ -38,7 +35,7 @@ function dealVersFormState(deal?: Deal): FormState {
   };
 }
 
-export function DealForm({ dealExistant, theme, onToggleTheme, onSubmit, onAnnuler }: DealFormProps) {
+export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
   const [form, setForm] = useState<FormState>(dealVersFormState(dealExistant));
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
@@ -100,9 +97,6 @@ export function DealForm({ dealExistant, theme, onToggleTheme, onSubmit, onAnnul
         <h2 className="text-lg font-semibold text-center">
           {dealExistant ? "Modifier le deal" : "Nouveau deal"}
         </h2>
-        <div className="absolute inset-y-0 right-4 flex items-center">
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-        </div>
       </div>
 
       <Champ label="Nom" erreur={erreurs.nom}>

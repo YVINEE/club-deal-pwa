@@ -1,11 +1,5 @@
 import { CalendarClock, BriefcaseBusiness, LayoutDashboard, Settings } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
-import { ThemeToggle } from "./ThemeToggle";
-
-interface MainLayoutProps {
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
-}
 
 const liens = [
   { to: "/", label: "Vue", description: "Tableau de bord", icon: LayoutDashboard, end: true },
@@ -14,7 +8,7 @@ const liens = [
   { to: "/parametres", label: "Paramètres", description: "Réglages", icon: Settings },
 ] as const;
 
-export function MainLayout({ theme, onToggleTheme }: MainLayoutProps) {
+export function MainLayout() {
   return (
     <div className="min-h-screen pb-24">
       <header className="sticky top-0 z-10 border-b bg-background px-4 py-3">
@@ -23,7 +17,6 @@ export function MainLayout({ theme, onToggleTheme }: MainLayoutProps) {
             <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" className="h-8 w-8 rounded-lg" />
             <h1 className="text-base font-semibold">Suivi Club Deals</h1>
           </div>
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         </div>
       </header>
 

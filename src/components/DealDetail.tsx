@@ -5,7 +5,6 @@ import { useProlongations } from "../hooks/useProlongations";
 import { EcheancesTab } from "./EcheancesTab";
 import { ProlongationsTab } from "./ProlongationsTab";
 import { ExportTab } from "./ExportTab";
-import { ThemeToggle } from "./ThemeToggle";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { annulerEcheanceEncaissee, marquerEcheanceEncaissee } from "../db/repositories";
 import {
@@ -23,8 +22,6 @@ type Onglet = "echeances" | "prolongations" | "exporter";
 
 interface DealDetailProps {
   dealId: string;
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
   onRetour: () => void;
   onModifier: () => void;
   suiviEncaissementsActif: boolean;
@@ -32,8 +29,6 @@ interface DealDetailProps {
 
 export function DealDetail({
   dealId,
-  theme,
-  onToggleTheme,
   onRetour,
   onModifier,
   suiviEncaissementsActif,
@@ -77,7 +72,6 @@ export function DealDetail({
         </button>
         <h1 className="font-semibold text-base truncate flex-1 text-center px-2">{deal.nom}</h1>
         <div className="flex gap-1">
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button onClick={onModifier} aria-label="Modifier" className="p-2">
             <Pencil size={18} aria-hidden="true" />
           </button>

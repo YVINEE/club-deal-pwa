@@ -28,7 +28,7 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     const themeEnregistre = localStorage.getItem("club-deal-theme");
     if (themeEnregistre === "light" || themeEnregistre === "dark") return themeEnregistre;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return "dark";
   });
   const [suiviEncaissementsActif, setSuiviEncaissementsActif] = useState(
     () => localStorage.getItem("club-deal-suivi-encaissements") === "true"
@@ -53,10 +53,6 @@ export default function App() {
     if (storageMode !== "plain") return;
     ouvrirStockage("plain").then(() => setStockagePret(true)).catch(() => setStockagePret(false));
   }, [storageMode]);
-
-  function basculerTheme() {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }
 
   async function deverrouillerBase(motDePasse: string): Promise<boolean> {
     try {
@@ -130,7 +126,7 @@ export default function App() {
     <>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
-          <Route element={<MainLayout theme={theme} onToggleTheme={basculerTheme} />}>
+          <Route element={<MainLayout />}>
             <Route
               path="/"
               element={
@@ -149,6 +145,8 @@ export default function App() {
               path="/parametres"
               element={
                 <SettingsPage
+                  theme={theme}
+                  onThemeChange={setTheme}
                   suiviEncaissementsActif={suiviEncaissementsActif}
                   onToggleSuiviEncaissements={setSuiviEncaissementsActif}
                   storageMode={storageMode}
@@ -165,16 +163,14 @@ export default function App() {
             path="/deal/:dealId"
             element={
               <EcranDetail
-                theme={theme}
-                onToggleTheme={basculerTheme}
                 suiviEncaissementsActif={suiviEncaissementsActif}
               />
             }
           />
-          <Route path="/nouveau" element={<EcranFormulaire theme={theme} onToggleTheme={basculerTheme} />} />
+          <Route path="/nouveau" element={<EcranFormulaire />} />
           <Route
             path="/deal/:dealId/modifier"
-            element={<EcranFormulaire theme={theme} onToggleTheme={basculerTheme} />}
+            element={<EcranFormulaire />}
           />
         </Routes>
       </BrowserRouter>
@@ -193,12 +189,8 @@ function EcranListe() {
 }
 
 function EcranDetail({
-  theme,
-  onToggleTheme,
   suiviEncaissementsActif,
 }: {
-  theme: Theme;
-  onToggleTheme: () => void;
   suiviEncaissementsActif: boolean;
 }) {
   const { dealId } = useParams<{ dealId: string }>();
@@ -208,8 +200,6 @@ function EcranDetail({
   return (
     <DealDetail
       dealId={dealId}
-      theme={theme}
-      onToggleTheme={onToggleTheme}
       suiviEncaissementsActif={suiviEncaissementsActif}
       onRetour={() => navigate("/")}
       onModifier={() => navigate(`/deal/${dealId}/modifier`)}
@@ -217,7 +207,7 @@ function EcranDetail({
   );
 }
 
-function EcranFormulaire({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
+function EcranFormulaire() {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
   const { deals, creer, modifier } = useDeals();
@@ -237,8 +227,6 @@ function EcranFormulaire({ theme, onToggleTheme }: { theme: Theme; onToggleTheme
   return (
     <DealForm
       dealExistant={dealExistant}
-      theme={theme}
-      onToggleTheme={onToggleTheme}
       onSubmit={gererSoumission}
       onAnnuler={() => navigate(dealExistant ? `/deal/${dealExistant.id}` : "/")}
     />
