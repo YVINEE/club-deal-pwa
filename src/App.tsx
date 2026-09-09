@@ -201,7 +201,7 @@ function EcranDetail({
     <DealDetail
       dealId={dealId}
       suiviEncaissementsActif={suiviEncaissementsActif}
-      onRetour={() => navigate("/")}
+      onRetour={() => navigate("/deals")}
       onModifier={() => navigate(`/deal/${dealId}/modifier`)}
     />
   );
@@ -217,10 +217,10 @@ function EcranFormulaire() {
   async function gererSoumission(deal: Deal) {
     if (dealExistant) {
       await modifier(deal);
-      navigate(`/deal/${deal.id}`);
+      navigate("/deals");
     } else {
       await creer(deal);
-      navigate("/");
+      navigate("/deals");
     }
   }
 
@@ -228,7 +228,7 @@ function EcranFormulaire() {
     <DealForm
       dealExistant={dealExistant}
       onSubmit={gererSoumission}
-      onAnnuler={() => navigate(dealExistant ? `/deal/${dealExistant.id}` : "/")}
+      onAnnuler={() => navigate("/deals")}
     />
   );
 }

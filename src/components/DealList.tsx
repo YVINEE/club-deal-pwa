@@ -37,13 +37,13 @@ export function DealList({
   }
 
   return (
-    <section className="relative mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-[#141d2e] to-[#0e1422] p-4 pb-28 text-white shadow-sm">
+    <section className="relative mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-slate-50 to-white p-4 pb-28 text-slate-900 shadow-sm dark:from-[#141d2e] dark:to-[#0e1422] dark:text-white">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.08em] text-gray-500">Portefeuille</p>
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-gray-500">Portefeuille</p>
           <h2 className="mt-1 text-xl font-semibold">Deals</h2>
         </div>
-        <div className="text-right text-xs text-slate-400">
+        <div className="text-right text-xs text-slate-500 dark:text-slate-400">
           <div>{dealsActifs.length} actif{dealsActifs.length > 1 ? "s" : ""}</div>
           <div>{totalEngage.toLocaleString("fr-FR")} € engagés</div>
         </div>
@@ -63,8 +63,8 @@ export function DealList({
               className={
                 "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors " +
                 (filtre === value
-                  ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-                  : "border-white/10 bg-white/5 text-slate-400 hover:text-white")
+                  ? "border-emerald-300 bg-emerald-100 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:text-white")
               }
             >
               {label}

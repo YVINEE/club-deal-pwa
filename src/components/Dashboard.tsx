@@ -40,45 +40,45 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
   const gainAbsolu = synthese.totalActuel - synthese.totalInvesti;
 
   return (
-    <section aria-labelledby="dashboard-title" className="mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-[#141d2e] to-[#0e1422] p-4 text-white shadow-sm">
+    <section aria-labelledby="dashboard-title" className="mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-slate-50 to-white p-4 text-slate-900 shadow-sm dark:from-[#141d2e] dark:to-[#0e1422] dark:text-white">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Portefeuille</p>
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Portefeuille</p>
           <h2 id="dashboard-title" className="mt-1 text-lg font-semibold">
             Vue d’ensemble
           </h2>
-          <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+          <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
             <Database size={13} aria-hidden="true" />
             {storageMode === "encrypted" ? "Base locale chiffrée" : "Base locale non chiffrée"}
           </div>
         </div>
-        <div className="rounded-full bg-blue-500/15 p-2 text-blue-300">
+        <div className="rounded-full bg-blue-100 p-2 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
           <TrendingUp size={18} aria-hidden="true" />
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-white/5 bg-black/10 p-3">
-        <div className="text-xs uppercase tracking-[0.08em] text-slate-400">Valeur actuelle</div>
+      <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/5 dark:bg-black/10">
+        <div className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Valeur actuelle</div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <strong className="text-2xl font-bold tabular-nums">{montant(synthese.totalActuel)}</strong>
-          <span className="text-sm font-semibold text-emerald-300">
+          <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
             +{pourcentage(synthese.performanceBrute)} · +{montant(gainAbsolu)}
           </span>
         </div>
-        <div className="mt-1 text-xs text-slate-400">
+        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Rendement moyen pondéré : {pourcentage(synthese.rendementMoyenPondere)}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Indicateur label="Capital investi" valeur={montant(synthese.totalInvesti)} />
-        <Indicateur label="Gains acquis" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-300" />
-        <Indicateur label="Gains futurs" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-300" />
-        <Indicateur label="Total final prévu" valeur={montant(synthese.totalFinal)} couleur="text-purple-300" />
+        <Indicateur label="Gains acquis" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-700 dark:text-emerald-300" />
+        <Indicateur label="Gains futurs" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-700 dark:text-emerald-300" />
+        <Indicateur label="Total final prévu" valeur={montant(synthese.totalFinal)} couleur="text-purple-700 dark:text-purple-300" />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
         <span>
           {dealsActifs} deal{dealsActifs > 1 ? "s" : ""} actif{dealsActifs > 1 ? "s" : ""}
         </span>
@@ -103,15 +103,15 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
 function Indicateur({
   label,
   valeur,
-  couleur = "text-white",
+  couleur = "text-slate-900 dark:text-white",
 }: {
   label: string;
   valeur: string;
   couleur?: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-[#1a2234] p-3">
-      <div className="text-[11px] uppercase tracking-[0.04em] text-slate-400">{label}</div>
+    <div className="rounded-xl border border-slate-200 bg-slate-100 p-3 dark:border-white/5 dark:bg-[#1a2234]">
+      <div className="text-[11px] uppercase tracking-[0.04em] text-slate-500 dark:text-slate-400">{label}</div>
       <div className={"mt-1 text-base font-semibold tabular-nums " + couleur}>{valeur}</div>
     </div>
   );
@@ -144,16 +144,16 @@ function EcheanceBanner({
 
   return (
     <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-xl border border-blue-400/20 bg-blue-500/10 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-      <div className="rounded-full bg-blue-400/15 p-2 text-blue-300">
+      <div className="rounded-full bg-blue-100 p-2 text-blue-600 dark:bg-blue-400/15 dark:text-blue-300">
         <CalendarClock size={18} aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-xs font-medium uppercase tracking-[0.04em] text-blue-200">{delai}</div>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-semibold text-white">
+        <div className="text-xs font-medium uppercase tracking-[0.04em] text-blue-700 dark:text-blue-200">{delai}</div>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-semibold text-slate-900 dark:text-white">
           <span className="whitespace-nowrap">{formatDateFr(date)}</span>
-          <span className="whitespace-nowrap text-emerald-300">Coupon : {montant(montantEcheance)}</span>
+          <span className="whitespace-nowrap text-emerald-700 dark:text-emerald-300">Coupon : {montant(montantEcheance)}</span>
         </div>
-        {nomDeal && <div className="truncate text-xs text-slate-400">{nomDeal}</div>}
+        {nomDeal && <div className="truncate text-xs text-slate-500 dark:text-slate-400">{nomDeal}</div>}
       </div>
       {suiviEncaissementsActif && date <= new Date() && (
         <button
@@ -213,20 +213,20 @@ function Courbe({ points }: { points: PointCourbe[] }) {
     <div className="mt-5">
       <div className="mb-1 flex items-center justify-between">
         <div className="text-sm font-medium">Trajectoire du portefeuille</div>
-        <div className="flex gap-1 rounded-full bg-black/10 p-0.5 text-[11px]">
+        <div className="flex gap-1 rounded-full bg-slate-100 p-0.5 text-[11px] dark:bg-black/10">
           {(["tout", "1a"] as const).map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => setPeriode(option)}
-              className={"rounded-full px-2 py-1 transition-colors " + (periode === option ? "bg-blue-500/20 text-blue-200" : "text-slate-500")}
+              className={"rounded-full px-2 py-1 transition-colors " + (periode === option ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200" : "text-slate-500")}
             >
               {option === "tout" ? "Tout" : "1A"}
             </button>
           ))}
         </div>
       </div>
-      <div className="mb-1 flex items-center justify-end gap-3 text-[11px] text-slate-400">
+      <div className="mb-1 flex items-center justify-end gap-3 text-[11px] text-slate-500 dark:text-slate-400">
           <span><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-400" />Réel</span>
           <span><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-purple-400" />Projeté</span>
       </div>
@@ -254,13 +254,13 @@ function Courbe({ points }: { points: PointCourbe[] }) {
       <div className="mt-2 grid grid-cols-3 items-end text-[11px] text-slate-500">
         <div>
           <div className="uppercase tracking-wide">Départ</div>
-          <div className="mt-1 text-sm font-semibold text-slate-300">{montant(pointsCourbe[0].valeur)}</div>
+          <div className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-300">{montant(pointsCourbe[0].valeur)}</div>
           <div>{formatDateFr(pointsCourbe[0].date)}</div>
         </div>
-        <div className="pb-1 text-center text-slate-400">Aujourd’hui</div>
+        <div className="pb-1 text-center text-slate-500 dark:text-slate-400">Aujourd’hui</div>
         <div className="text-right">
           <div className="uppercase tracking-wide">Fin de période</div>
-          <div className="mt-1 text-sm font-semibold text-slate-300">{montant(pointsCourbe[pointsCourbe.length - 1].valeur)}</div>
+          <div className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-300">{montant(pointsCourbe[pointsCourbe.length - 1].valeur)}</div>
           <div>{formatDateFr(pointsCourbe[pointsCourbe.length - 1].date)}</div>
         </div>
       </div>

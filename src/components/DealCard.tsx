@@ -13,9 +13,9 @@ interface DealCardProps {
 }
 
 const BADGE_CONFIG: Record<StatutDeal, { label: string; dot: string }> = {
-  actif: { label: "Actif", dot: "bg-emerald-400" },
-  enProlongation: { label: "En prolongation", dot: "bg-amber-400" },
-  termine: { label: "Terminé", dot: "bg-red-400" },
+  actif: { label: "Actif", dot: "bg-emerald-600 dark:bg-emerald-400" },
+  enProlongation: { label: "En prolongation", dot: "bg-amber-600 dark:bg-amber-400" },
+  termine: { label: "Terminé", dot: "bg-red-600 dark:bg-red-400" },
 };
 
 export function DealCard({
@@ -36,10 +36,10 @@ export function DealCard({
     : undefined;
   const badgeClasses =
     statut === "enProlongation"
-      ? "bg-amber-400/10 text-amber-300"
+      ? "bg-amber-100 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
       : statut === "actif"
-        ? "bg-emerald-400/10 text-emerald-300"
-        : "bg-red-400/10 text-red-300";
+        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+        : "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300";
 
   return (
     <div
@@ -88,7 +88,7 @@ export function DealCard({
       )}
 
       {statut === "enProlongation" && (
-        <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+        <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
           <Clock3 size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>Maturité étendue · remboursement cible {formatDateFr(dateFin)}</span>
         </div>

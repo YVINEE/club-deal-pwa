@@ -67,31 +67,31 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   }
 
   return (
-    <section className="relative mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-[#141d2e] to-[#0e1422] p-4 pb-28 text-white shadow-sm">
+    <section className="relative mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-slate-50 to-white p-4 pb-28 text-slate-900 shadow-sm dark:from-[#141d2e] dark:to-[#0e1422] dark:text-white">
       <div className="mb-4">
-        <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Suivi</p>
+        <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Suivi</p>
         <h2 className="mt-1 text-xl font-semibold">Échéances</h2>
       </div>
 
-      <div className="mb-4 rounded-2xl border border-white/5 bg-[#111827] p-4">
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-[#111827]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Échéancier de trésorerie</p>
-            <p className="mt-1 text-2xl font-semibold text-white">{formatMontant(totalEcheances)}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Échéancier de trésorerie</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">{formatMontant(totalEcheances)}</p>
             <p className="mt-1 text-xs text-slate-500">Sur la période affichée</p>
           </div>
-          <div className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
+          <div className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
             {nbAPointer} à pointer
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-xl bg-white/5 p-3">
+          <div className="rounded-xl bg-slate-100 p-3 dark:bg-white/5">
             <div className="text-xs text-slate-500">Déjà encaissé</div>
-            <div className="mt-1 font-semibold text-emerald-300">{formatMontant(totalEncaisse)}</div>
+            <div className="mt-1 font-semibold text-emerald-700 dark:text-emerald-300">{formatMontant(totalEncaisse)}</div>
           </div>
-          <div className="rounded-xl bg-white/5 p-3">
+          <div className="rounded-xl bg-slate-100 p-3 dark:bg-white/5">
             <div className="text-xs text-slate-500">À recevoir</div>
-            <div className="mt-1 font-semibold text-blue-300">{formatMontant(totalARecevoir)}</div>
+            <div className="mt-1 font-semibold text-blue-700 dark:text-blue-300">{formatMontant(totalARecevoir)}</div>
           </div>
         </div>
       </div>
@@ -112,8 +112,8 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
               className={
                 "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors " +
                 (filtre === valeur
-                  ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-                  : "border-white/10 text-slate-400 hover:text-white")
+                  ? "border-emerald-300 bg-emerald-100 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  : "border-slate-200 text-slate-500 hover:text-slate-900 dark:border-white/10 dark:text-slate-400 dark:hover:text-white")
               }
             >
               {libelle}
@@ -123,11 +123,11 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
       )}
 
       {loading ? (
-        <p className="py-8 text-center text-slate-400">Chargement des échéances...</p>
+        <p className="py-8 text-center text-slate-500 dark:text-slate-400">Chargement des échéances...</p>
       ) : echeances.length === 0 ? (
-        <p className="py-8 text-center text-slate-400">Aucune échéance pour l’instant.</p>
+        <p className="py-8 text-center text-slate-500 dark:text-slate-400">Aucune échéance pour l’instant.</p>
       ) : echeancesFiltrees.length === 0 ? (
-        <p className="py-8 text-center text-slate-400">Aucune échéance dans ce filtre.</p>
+        <p className="py-8 text-center text-slate-500 dark:text-slate-400">Aucune échéance dans ce filtre.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {echeancesFiltrees.map((echeance, index) => {
@@ -138,31 +138,31 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
             return (
               <Fragment key={echeance.id}>
                 {groupe !== groupePrecedent && (
-                  <div className="mt-2 flex items-center justify-between border-b border-white/10 pb-2 first:mt-0">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">{groupe}</h3>
-                    <span className="text-xs font-semibold text-emerald-300">{formatMontant(totauxParMois.get(groupe) ?? 0)}</span>
+                  <div className="mt-2 flex items-center justify-between border-b border-slate-200 pb-2 first:mt-0 dark:border-white/10">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{groupe}</h3>
+                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{formatMontant(totauxParMois.get(groupe) ?? 0)}</span>
                   </div>
                 )}
-                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-[#111827]">
                   <div className="flex items-start justify-between gap-3">
                     <button
                       type="button"
                       onClick={() => navigate(`/deal/${echeance.dealId}`)}
                       className="min-w-0 text-left"
                     >
-                      <div className="truncate font-semibold text-white">{echeance.nomDeal}</div>
-                      <div className="mt-1 flex items-center gap-1.5 text-sm text-slate-400">
+                      <div className="truncate font-semibold text-slate-900 dark:text-white">{echeance.nomDeal}</div>
+                      <div className="mt-1 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                         <CalendarClock size={15} aria-hidden="true" />
                         {formatDateFr(echeance.date)}
                       </div>
                     </button>
-                    <span className="shrink-0 font-semibold text-emerald-300">{formatMontant(echeance.montant)}</span>
+                    <span className="shrink-0 font-semibold text-emerald-700 dark:text-emerald-300">{formatMontant(echeance.montant)}</span>
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-2">
                     <span
                       className={`inline-flex items-center gap-1 text-xs font-medium ${
-                        echeance.encaissee ? "text-emerald-300" : echue ? "text-amber-300" : "text-blue-300"
+                        echeance.encaissee ? "text-emerald-700 dark:text-emerald-300" : echue ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300"
                       }`}
                     >
                       {echeance.encaissee && <Check size={14} aria-hidden="true" />}
@@ -172,7 +172,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
                       <button
                         type="button"
                         onClick={() => depointer(echeance.id)}
-                        className="rounded-lg border border-emerald-500/50 px-3 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-emerald-500/10"
+                        className="rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-500/50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
                       >
                         Dépointer
                       </button>
