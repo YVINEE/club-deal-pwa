@@ -13,11 +13,8 @@ export function useToutesLesEcheances(refreshKey: number = 0) {
   const charger = useCallback(async () => {
     setLoading(true);
     try {
-      const maintenant = new Date();
       const data = await lirePortefeuille();
-      const toutesEcheances = data.echeances
-        .filter((echeance) => echeance.date >= maintenant)
-        .sort((a, b) => a.date.getTime() - b.date.getTime());
+      const toutesEcheances = [...data.echeances].sort((a, b) => a.date.getTime() - b.date.getTime());
 
       const dealIds = [...new Set(toutesEcheances.map((e) => e.dealId))];
       const nomsParId = new Map(data.deals.filter((deal) => dealIds.includes(deal.id)).map((deal) => [deal.id, deal.nom]));

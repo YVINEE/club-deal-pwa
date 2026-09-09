@@ -6,6 +6,10 @@ import { DealDetail } from "./components/DealDetail";
 import { DealForm } from "./components/DealForm";
 import { Deal } from "./types";
 import { EncryptionLockScreen } from "./components/EncryptionLockScreen";
+import { MainLayout } from "./components/MainLayout";
+import { DashboardPage } from "./components/DashboardPage";
+import { EcheancesPage } from "./components/EcheancesPage";
+import { SettingsPage } from "./components/SettingsPage";
 import {
   activerChiffrement,
   changerMotDePasseChiffrement,
@@ -126,23 +130,37 @@ export default function App() {
     <>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <EcranListe
-                theme={theme}
-                onToggleTheme={basculerTheme}
-                suiviEncaissementsActif={suiviEncaissementsActif}
-                onToggleSuiviEncaissements={setSuiviEncaissementsActif}
-                storageMode={storageMode}
-                onActiverChiffrement={activerBaseChiffree}
-                onDesactiverChiffrement={desactiverBaseChiffree}
-                onChangerMotDePasse={changerMotDePasseBase}
-                onExporterJson={telechargerJson}
-                onImporterJson={importerFichier}
-              />
-            }
-          />
+          <Route element={<MainLayout theme={theme} onToggleTheme={basculerTheme} />}>
+            <Route
+              path="/"
+              element={
+                <DashboardPage
+                  suiviEncaissementsActif={suiviEncaissementsActif}
+                  storageMode={storageMode}
+                />
+              }
+            />
+            <Route
+              path="/deals"
+              element={<EcranListe />}
+            />
+            <Route path="/echeances" element={<EcheancesPage suiviEncaissementsActif={suiviEncaissementsActif} />} />
+            <Route
+              path="/parametres"
+              element={
+                <SettingsPage
+                  suiviEncaissementsActif={suiviEncaissementsActif}
+                  onToggleSuiviEncaissements={setSuiviEncaissementsActif}
+                  storageMode={storageMode}
+                  onActiverChiffrement={activerBaseChiffree}
+                  onDesactiverChiffrement={desactiverBaseChiffree}
+                  onChangerMotDePasse={changerMotDePasseBase}
+                  onExporterJson={telechargerJson}
+                  onImporterJson={importerFichier}
+                />
+              }
+            />
+          </Route>
           <Route
             path="/deal/:dealId"
             element={
@@ -164,42 +182,10 @@ export default function App() {
   );
 }
 
-function EcranListe({
-  theme,
-  onToggleTheme,
-  suiviEncaissementsActif,
-  onToggleSuiviEncaissements,
-  storageMode,
-  onActiverChiffrement,
-  onDesactiverChiffrement,
-  onChangerMotDePasse,
-  onExporterJson,
-  onImporterJson,
-}: {
-  theme: Theme;
-  onToggleTheme: () => void;
-  suiviEncaissementsActif: boolean;
-  onToggleSuiviEncaissements: (actif: boolean) => void;
-  storageMode: StorageMode;
-  onActiverChiffrement: (motDePasse: string) => Promise<void>;
-  onDesactiverChiffrement: (motDePasse: string) => Promise<void>;
-  onChangerMotDePasse: (ancien: string, nouveau: string) => Promise<void>;
-  onExporterJson: () => Promise<void>;
-  onImporterJson: (file: File) => Promise<void>;
-}) {
+function EcranListe() {
   const navigate = useNavigate();
   return (
     <DealList
-      theme={theme}
-      onToggleTheme={onToggleTheme}
-      suiviEncaissementsActif={suiviEncaissementsActif}
-      onToggleSuiviEncaissements={onToggleSuiviEncaissements}
-      storageMode={storageMode}
-      onActiverChiffrement={onActiverChiffrement}
-      onDesactiverChiffrement={onDesactiverChiffrement}
-      onChangerMotDePasse={onChangerMotDePasse}
-      onExporterJson={onExporterJson}
-      onImporterJson={onImporterJson}
       onSelectDeal={(dealId) => navigate(`/deal/${dealId}`)}
       onAjouterDeal={() => navigate("/nouveau")}
     />

@@ -1,44 +1,22 @@
-import { useState } from "react";
 import { useDeals } from "../hooks/useDeals";
 import { DealCard } from "./DealCard";
-import { ThemeToggle } from "./ThemeToggle";
-import { SecuritySettings } from "./SecuritySettings";
-import { Dashboard } from "./Dashboard";
-import { Plus, Settings } from "lucide-react";
-import { marquerEcheanceEncaissee } from "../db/repositories";
-import { StorageMode } from "../db/secureStorage";
+import { Plus } from "lucide-react";
 
 interface DealListProps {
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
   onSelectDeal: (dealId: string) => void;
   onAjouterDeal: () => void;
-  suiviEncaissementsActif: boolean;
-  onToggleSuiviEncaissements: (actif: boolean) => void;
-  storageMode: StorageMode;
-  onActiverChiffrement: (motDePasse: string) => Promise<void>;
-  onDesactiverChiffrement: (motDePasse: string) => Promise<void>;
-  onChangerMotDePasse: (ancien: string, nouveau: string) => Promise<void>;
-  onExporterJson: () => Promise<void>;
-  onImporterJson: (file: File) => Promise<void>;
 }
 
 export function DealList({
-  theme,
-  onToggleTheme,
   onSelectDeal,
   onAjouterDeal,
-  suiviEncaissementsActif,
-  onToggleSuiviEncaissements,
-  storageMode,
-  onActiverChiffrement,
-  onDesactiverChiffrement,
-  onChangerMotDePasse,
-  onExporterJson,
-  onImporterJson,
 }: DealListProps) {
-  const { deals, loading, error, rafraichir } = useDeals();
-  const [reglagesOuverts, setReglagesOuverts] = useState(false);
+  const { deals, loading, error } = useDeals();
+  const dealsTries = [...deals].sort((a, b) => {
+    const dateA = a.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const dateB = b.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    return dateA - dateB;
+  });
 
   if (loading) {
     return <div className="p-4 text-center text-gray-500">Chargement des deals...</div>;
@@ -49,52 +27,18 @@ export function DealList({
   }
 
   return (
-    <div className="relative mx-auto min-h-screen max-w-[440px] pb-20">
-      <div className="sticky top-0 bg-background border-b px-4 py-3 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" className="h-8 w-8 rounded-lg" />
-          <h1 className="font-semibold text-base">Suivi Club Deals</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setReglagesOuverts((ouvert) => !ouvert)}
-            aria-label="Réglages"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-background text-foreground"
-          >
-            <Settings size={20} aria-hidden="true" />
-          </button>
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-        </div>
+    <div className="relative p-4">
+      <div className="mb-4">
+        <p className="text-xs font-medium uppercase tracking-[0.08em] text-gray-500">Portefeuille</p>
+        <h2 className="mt-1 text-xl font-semibold">Deals</h2>
       </div>
-      {reglagesOuverts && (
-        <SecuritySettings
-          suiviEncaissementsActif={suiviEncaissementsActif}
-          onToggleSuiviEncaissements={onToggleSuiviEncaissements}
-          storageMode={storageMode}
-          onActiverChiffrement={onActiverChiffrement}
-          onDesactiverChiffrement={onDesactiverChiffrement}
-          onChangerMotDePasse={onChangerMotDePasse}
-          onExporterJson={onExporterJson}
-          onImporterJson={onImporterJson}
-        />
-      )}
-      <Dashboard
-        deals={deals}
-        suiviEncaissementsActif={suiviEncaissementsActif}
-        onPointer={async (echeanceId) => {
-          await marquerEcheanceEncaissee(echeanceId);
-          await rafraichir();
-        }}
-        storageMode={storageMode}
-      />
       {deals.length === 0 ? (
         <div className="p-8 text-center text-gray-500">
           Aucun deal pour l'instant. Ajoutez-en un avec le bouton +.
         </div>
       ) : (
         <div className="flex flex-col gap-3 p-4">
-          {deals.map(({ deal, statut, dateFin, prochaineEcheanceDate, prochaineEcheanceMontant }) => (
+          {dealsTries.map(({ deal, statut, dateFin, prochaineEcheanceDate, prochaineEcheanceMontant }) => (
             <DealCard
               key={deal.id}
               deal={deal}
@@ -111,7 +55,7 @@ export function DealList({
       <button
         onClick={onAjouterDeal}
         aria-label="Ajouter un deal"
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white text-2xl shadow-lg flex items-center justify-center active:bg-blue-700 transition-colors"
+        className="fixed bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-2xl text-white shadow-lg transition-colors active:bg-emerald-700"
       >
         <Plus size={24} aria-hidden="true" />
       </button>
