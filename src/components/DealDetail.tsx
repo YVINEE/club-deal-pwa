@@ -7,7 +7,7 @@ import { ProlongationsTab } from "./ProlongationsTab";
 import { ExportTab } from "./ExportTab";
 import { ThemeToggle } from "./ThemeToggle";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
-import { marquerEcheanceEncaissee } from "../db/repositories";
+import { annulerEcheanceEncaissee, marquerEcheanceEncaissee } from "../db/repositories";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -64,6 +64,11 @@ export function DealDetail({
     await rafraichirEcheances();
   }
 
+  async function depointerEcheance(echeanceId: string) {
+    await annulerEcheanceEncaissee(echeanceId);
+    await rafraichirEcheances();
+  }
+
   return (
     <div className="min-h-screen pb-16">
       <div className="sticky top-0 bg-background border-b px-4 py-3 flex items-center justify-between z-10">
@@ -96,6 +101,7 @@ export function DealDetail({
             loading={chargementEcheances}
             suiviEncaissementsActif={suiviEncaissementsActif}
             onPointer={pointerEcheance}
+            onUnpointer={depointerEcheance}
           />
         )}
         {onglet === "prolongations" && (

@@ -7,6 +7,7 @@ interface EcheancesTabProps {
   loading: boolean;
   suiviEncaissementsActif: boolean;
   onPointer: (echeanceId: string) => Promise<void>;
+  onUnpointer: (echeanceId: string) => Promise<void>;
 }
 
 type StatutEcheance = "passee" | "aujourdhui" | "future";
@@ -28,7 +29,13 @@ const STYLE_PAR_STATUT: Record<StatutEcheance, string> = {
   future: "text-blue-600 bg-blue-50 dark:bg-blue-950",
 };
 
-export function EcheancesTab({ echeances, loading, suiviEncaissementsActif, onPointer }: EcheancesTabProps) {
+export function EcheancesTab({
+  echeances,
+  loading,
+  suiviEncaissementsActif,
+  onPointer,
+  onUnpointer,
+}: EcheancesTabProps) {
   if (loading) {
     return <div className="text-center text-gray-500 py-8">Chargement des échéances...</div>;
   }
@@ -64,7 +71,13 @@ export function EcheancesTab({ echeances, loading, suiviEncaissementsActif, onPo
                 </button>
               )}
               {suiviEncaissementsActif && echeance.encaissee && (
-                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Encaissé</span>
+                <button
+                  type="button"
+                  onClick={() => onUnpointer(echeance.id)}
+                  className="rounded-lg border border-emerald-600 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                >
+                  Dépointer
+                </button>
               )}
             </div>
           </div>

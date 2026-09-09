@@ -65,6 +65,14 @@ export async function marquerEcheanceEncaissee(echeanceId: string): Promise<void
   await enregistrerPortefeuille(data);
 }
 
+export async function annulerEcheanceEncaissee(echeanceId: string): Promise<void> {
+  const data = await lirePortefeuille();
+  const echeance = data.echeances.find((candidate) => candidate.id === echeanceId);
+  if (!echeance) throw new Error("Échéance introuvable");
+  echeance.encaissee = false;
+  await enregistrerPortefeuille(data);
+}
+
 export async function getDealsAvecEcheances() {
   const data = await lirePortefeuille();
   return Promise.all(
