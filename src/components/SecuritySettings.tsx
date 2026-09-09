@@ -140,28 +140,6 @@ export function SecuritySettings({
                 Changer le mot de passe
               </Button>
             )}
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={onExporterJson} className="h-auto min-h-20 flex-col gap-1.5 py-3">
-                <Download size={18} aria-hidden="true" />
-                <span>Exporter JSON</span>
-                <span className="text-[11px] font-normal text-slate-500">Sauvegarde locale</span>
-              </Button>
-              <label className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-3 text-center text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
-                <Upload size={18} aria-hidden="true" />
-                <span>Importer JSON</span>
-                <span className="text-[11px] font-normal text-slate-500">Restaurer un fichier</span>
-                <input
-                  type="file"
-                  accept="application/json,.json"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void onImporterJson(file);
-                    event.target.value = "";
-                  }}
-                />
-              </label>
-            </div>
           </div>
         )}
 
@@ -221,6 +199,29 @@ export function SecuritySettings({
             <p className="text-xs text-slate-500">Le mot de passe ne peut pas être récupéré.</p>
           </div>
         )}
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button type="button" variant="outline" onClick={onExporterJson} className="h-auto min-h-20 flex-col gap-1.5 py-3">
+            <Download size={18} aria-hidden="true" />
+            <span>Exporter JSON</span>
+            <span className="text-[11px] font-normal text-slate-500">Sauvegarde locale</span>
+          </Button>
+          <label className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-3 text-center text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
+            <Upload size={18} aria-hidden="true" />
+            <span>Importer JSON</span>
+            <span className="text-[11px] font-normal text-slate-500">Restaurer un fichier</span>
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void onImporterJson(file);
+                event.target.value = "";
+              }}
+            />
+          </label>
+        </div>
       </section>
     </div>
   );
