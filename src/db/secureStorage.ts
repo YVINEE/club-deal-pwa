@@ -142,6 +142,10 @@ export async function ouvrirStockage(mode: StorageMode): Promise<void> {
   }
 }
 
+export function verrouillerStockage(): void {
+  if (session?.mode === "encrypted") session = null;
+}
+
 export async function deverrouillerStockage(motDePasse: string): Promise<void> {
   if (!motDePasse) throw new Error("Mot de passe requis");
   const vault = await db.vault.get(VAULT_ID);

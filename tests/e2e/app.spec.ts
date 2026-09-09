@@ -160,9 +160,21 @@ test("active le chiffrement, recharge et déverrouille", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByRole("heading", { name: "Application protégée" })).toBeVisible();
+  await page.clock.install();
   await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-e2e");
   await page.getByRole("button", { name: "Déverrouiller" }).click();
   await expect(page.getByRole("heading", { name: "Paramètres", exact: true })).toBeVisible();
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.clock.fastForward(60_001);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByRole("heading", { name: "Application protégée" })).toBeVisible();
 });
 
 test("exporte puis importe un JSON", async ({ page, browser }) => {

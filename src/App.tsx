@@ -20,6 +20,7 @@ import {
   importerJson,
   lirePortefeuille,
   ouvrirStockage,
+  verrouillerStockage,
   StorageMode,
 } from "./db/secureStorage";
 import {
@@ -31,6 +32,7 @@ import {
 } from "./utils/notifications";
 
 type Theme = "light" | "dark";
+const DUREE_VERROUILLAGE_MS = 60_000;
 
 export default function App() {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -64,6 +66,47 @@ export default function App() {
     if (storageMode !== "plain") return;
     ouvrirStockage("plain").then(() => setStockagePret(true)).catch(() => setStockagePret(false));
   }, [storageMode]);
+
+  useEffect(() => {
+    if (storageMode !== "encrypted" || !stockagePret) return;
+
+    let cacheEnArrierePlanDepuis: number | null = null;
+    let timer: number | undefined;
+
+    const annulerTimer = () => {
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        timer = undefined;
+      }
+    };
+    const verrouiller = () => {
+      verrouillerStockage();
+      setStockagePret(false);
+    };
+    const verifierExpiration = () => {
+      if (cacheEnArrierePlanDepuis !== null && Date.now() - cacheEnArrierePlanDepuis >= DUREE_VERROUILLAGE_MS) {
+        verrouiller();
+      }
+    };
+    const gererVisibilite = () => {
+      if (document.visibilityState === "hidden") {
+        cacheEnArrierePlanDepuis = Date.now();
+        annulerTimer();
+        timer = window.setTimeout(verrouiller, DUREE_VERROUILLAGE_MS);
+        return;
+      }
+
+      annulerTimer();
+      verifierExpiration();
+      cacheEnArrierePlanDepuis = null;
+    };
+
+    document.addEventListener("visibilitychange", gererVisibilite);
+    return () => {
+      annulerTimer();
+      document.removeEventListener("visibilitychange", gererVisibilite);
+    };
+  }, [stockagePret, storageMode]);
 
   useEffect(() => {
     if (!stockagePret || !notificationsActives) return;
