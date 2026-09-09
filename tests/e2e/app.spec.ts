@@ -93,6 +93,28 @@ test("change de thème clair puis sombre", async ({ page }) => {
   await expect(page.locator("html")).toHaveClass(/dark/);
 });
 
+test("active puis désactive les notifications d’échéances", async ({ page }) => {
+  await page.addInitScript(() => {
+    class MockNotification {
+      static permission = "granted";
+      static requestPermission = async () => "granted";
+      onclick: (() => void) | null = null;
+      close() {}
+      constructor() {}
+    }
+    Object.defineProperty(window, "Notification", { configurable: true, value: MockNotification });
+  });
+  await openApp(page);
+  await openSettings(page);
+
+  const notifications = page.getByRole("switch", { name: "Activer les notifications d’échéances" });
+  await expect(notifications).toHaveAttribute("aria-checked", "false");
+  await notifications.click();
+  await expect(notifications).toHaveAttribute("aria-checked", "true");
+  await notifications.click();
+  await expect(notifications).toHaveAttribute("aria-checked", "false");
+});
+
 test("active le chiffrement, recharge et déverrouille", async ({ page }) => {
   await openApp(page);
   await openSettings(page);

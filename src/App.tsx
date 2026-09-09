@@ -18,9 +18,17 @@ import {
   exporterJson,
   getStorageMode,
   importerJson,
+  lirePortefeuille,
   ouvrirStockage,
   StorageMode,
 } from "./db/secureStorage";
+import {
+  demanderPermissionNotifications,
+  enregistrerPreferenceNotifications,
+  notificationsDisponibles,
+  notificationsEcheancesActivees,
+  notifierEcheancesDuJour,
+} from "./utils/notifications";
 
 type Theme = "light" | "dark";
 
@@ -35,6 +43,9 @@ export default function App() {
   );
   const [storageMode, setStorageMode] = useState<StorageMode>(getStorageMode);
   const [stockagePret, setStockagePret] = useState(false);
+  const [notificationsActives, setNotificationsActives] = useState(
+    () => notificationsDisponibles() && notificationsEcheancesActivees() && Notification.permission !== "denied",
+  );
 
   useEffect(() => {
     localStorage.removeItem("club-deal-security");
@@ -53,6 +64,34 @@ export default function App() {
     if (storageMode !== "plain") return;
     ouvrirStockage("plain").then(() => setStockagePret(true)).catch(() => setStockagePret(false));
   }, [storageMode]);
+
+  useEffect(() => {
+    if (!stockagePret || !notificationsActives) return;
+
+    let annule = false;
+    const verifier = async () => {
+      try {
+        const data = await lirePortefeuille();
+        if (annule) return;
+        const nomsParDeal = new Map(data.deals.map((deal) => [deal.id, deal.nom]));
+        notifierEcheancesDuJour(data.echeances, nomsParDeal);
+      } catch {
+        // Le stockage peut être verrouillé entre deux changements d’onglet.
+      }
+    };
+    const auRetour = () => {
+      if (document.visibilityState === "visible") void verifier();
+    };
+
+    void verifier();
+    document.addEventListener("visibilitychange", auRetour);
+    window.addEventListener("focus", auRetour);
+    return () => {
+      annule = true;
+      document.removeEventListener("visibilitychange", auRetour);
+      window.removeEventListener("focus", auRetour);
+    };
+  }, [notificationsActives, stockagePret]);
 
   async function deverrouillerBase(motDePasse: string): Promise<boolean> {
     try {
@@ -108,6 +147,24 @@ export default function App() {
     }
   }
 
+  async function toggleNotificationsActives(actives: boolean): Promise<void> {
+    if (!actives) {
+      enregistrerPreferenceNotifications(false);
+      setNotificationsActives(false);
+      return;
+    }
+
+    const autorisees = await demanderPermissionNotifications();
+    if (!autorisees) {
+      enregistrerPreferenceNotifications(false);
+      setNotificationsActives(false);
+      window.alert("Les notifications sont indisponibles ou ont été refusées dans le navigateur.");
+      return;
+    }
+    enregistrerPreferenceNotifications(true);
+    setNotificationsActives(true);
+  }
+
   if (!stockagePret) {
     return (
       <>
@@ -149,6 +206,8 @@ export default function App() {
                   onThemeChange={setTheme}
                   suiviEncaissementsActif={suiviEncaissementsActif}
                   onToggleSuiviEncaissements={setSuiviEncaissementsActif}
+                  notificationsActives={notificationsActives}
+                  onToggleNotifications={toggleNotificationsActives}
                   storageMode={storageMode}
                   onActiverChiffrement={activerBaseChiffree}
                   onDesactiverChiffrement={desactiverBaseChiffree}

@@ -9,6 +9,8 @@ interface SettingsPageProps {
   onThemeChange: (theme: Theme) => void;
   suiviEncaissementsActif: boolean;
   onToggleSuiviEncaissements: (actif: boolean) => void;
+  notificationsActives: boolean;
+  onToggleNotifications: (actif: boolean) => Promise<void>;
   storageMode: StorageMode;
   onActiverChiffrement: (motDePasse: string) => Promise<void>;
   onDesactiverChiffrement: (motDePasse: string) => Promise<void>;

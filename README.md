@@ -15,6 +15,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 - Graphique de trajectoire du portefeuille avec vues « Tout » et « 1A ».
 - Export CSV et calendrier ICS depuis le détail d’un deal.
 - Export et import JSON pour sauvegarder ou restaurer les données locales.
+- Notifications locales le jour des échéances, activables dans les paramètres.
 - Stockage local Dexie/IndexedDB, utilisable hors ligne.
 - Chiffrement optionnel de la base locale par mot de passe.
 - Thème sombre par défaut et thème clair disponible dans les paramètres.
@@ -94,8 +95,19 @@ tests/e2e/                   # Parcours Playwright
 - Les échéances sont recalculées lorsque les paramètres financiers du deal sont modifiés.
 - Un deal arrivé à son terme devient terminé, sauf prolongation déclenchée manuellement avant l’échéance.
 - Le pointage des échéances est optionnel dans les paramètres.
+- Les notifications d’échéances sont désactivées par défaut et nécessitent l’autorisation du navigateur.
 - L’import JSON remplace les données locales existantes après confirmation.
 
 ## Sécurité et sauvegardes
 
 Le chiffrement protège les données stockées localement sur l’appareil, mais ne remplace pas une sauvegarde. Exportez régulièrement un fichier JSON et conservez-le dans un emplacement sûr. Les fichiers JSON chiffrés nécessitent leur mot de passe pour être importés.
+
+## Notifications
+
+Les notifications d’échéances sont optionnelles et s’activent depuis **Paramètres**. La PWA vérifie les échéances non encaissées le jour prévu :
+
+- à l’ouverture de l’application ;
+- lorsque l’application redevient visible ou active ;
+- une seule fois par échéance et par jour.
+
+Le navigateur doit autoriser les notifications. Le clic sur une notification ouvre l’écran **Échéances**. Comme les données sont locales, une PWA complètement fermée ne garantit pas une notification en arrière-plan sur tous les appareils ; cette garantie nécessiterait un service Push et un serveur.

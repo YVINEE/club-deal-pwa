@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Download, KeyRound, ListChecks, LockKeyhole, Upload } from "lucide-react";
+import { Bell, Database, Download, KeyRound, ListChecks, LockKeyhole, Upload } from "lucide-react";
 import { StorageMode } from "../db/secureStorage";
 import { motDePasseValide } from "../utils/crypto";
 import { Button } from "./ui/button";
@@ -10,6 +10,8 @@ type ActionChiffrement = "activer" | "modifier" | "desactiver" | null;
 interface SecuritySettingsProps {
   suiviEncaissementsActif: boolean;
   onToggleSuiviEncaissements: (actif: boolean) => void;
+  notificationsActives: boolean;
+  onToggleNotifications: (actif: boolean) => Promise<void>;
   storageMode: StorageMode;
   onActiverChiffrement: (motDePasse: string) => Promise<void>;
   onDesactiverChiffrement: (motDePasse: string) => Promise<void>;
@@ -21,6 +23,8 @@ interface SecuritySettingsProps {
 export function SecuritySettings({
   suiviEncaissementsActif,
   onToggleSuiviEncaissements,
+  notificationsActives,
+  onToggleNotifications,
   storageMode,
   onActiverChiffrement,
   onDesactiverChiffrement,
@@ -101,6 +105,35 @@ export function SecuritySettings({
         </div>
         <p className="mt-3 rounded-xl bg-slate-100 p-3 text-xs text-slate-600 dark:bg-white/5 dark:text-slate-400">
           Les échéances échues pourront être marquées comme encaissées depuis les écrans Échéances et Dashboard.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-[#111827]">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-emerald-600 dark:bg-white/5 dark:text-emerald-300">
+              <Bell size={17} aria-hidden="true" />
+            </span>
+            <div>
+              <h3 className="font-semibold">Notifications d’échéances</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Prévenez-moi le jour d’un coupon à recevoir.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={notificationsActives}
+            aria-label="Activer les notifications d’échéances"
+            onClick={() => void onToggleNotifications(!notificationsActives)}
+            className={`relative mt-1 inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#111827] ${
+              notificationsActives ? "bg-emerald-600" : "bg-slate-300 dark:bg-slate-700"
+            }`}
+          >
+            <span aria-hidden="true" className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${notificationsActives ? "translate-x-5" : "translate-x-0"}`} />
+          </button>
+        </div>
+        <p className="mt-3 rounded-xl bg-slate-100 p-3 text-xs text-slate-600 dark:bg-white/5 dark:text-slate-400">
+          La PWA vérifie les échéances à l’ouverture et lorsque vous revenez dans l’application. Le navigateur doit autoriser les notifications.
         </p>
       </section>
 
