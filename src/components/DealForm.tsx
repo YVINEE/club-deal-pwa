@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { calculerCouponEstime } from "../utils/calculs";
 
 interface DealFormProps {
   dealExistant?: Deal;
@@ -39,6 +40,9 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
   const [form, setForm] = useState<FormState>(dealVersFormState(dealExistant));
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const couponEstime = Number(form.montant) > 0 && Number(form.rendementAnnuel) > 0
+    ? calculerCouponEstime(Number(form.montant), Number(form.rendementAnnuel), form.frequence)
+    : null;
 
   useEffect(() => {
     setForm(dealVersFormState(dealExistant));
@@ -106,6 +110,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
       <Champ label="Date de début" erreur={erreurs.dateDebut}>
         <Input
           type="date"
+          lang="fr-FR"
           value={form.dateDebut}
           onChange={(e) => majChamp("dateDebut", e.target.value)}
           className="h-12 text-base"
@@ -147,6 +152,11 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
           </SelectContent>
         </Select>
       </Champ>
+      {couponEstime !== null && (
+        <p className="-mt-3 text-sm text-emerald-600 dark:text-emerald-300">
+          Coupon estimé : {couponEstime.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € par {form.frequence === "trimestriel" ? "trimestre" : "semestre"}
+        </p>
+      )}
 
       <Champ label="Durée initiale (mois)" erreur={erreurs.dureeInitiale}>
         <Input

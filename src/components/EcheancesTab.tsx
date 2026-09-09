@@ -65,8 +65,9 @@ export function EcheancesTab({
                 <button
                   type="button"
                   onClick={() => onPointer(echeance.id)}
-                  className="rounded-lg bg-emerald-600 px-2 py-1 text-xs font-medium text-white"
+                  className="flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-xs font-medium text-white"
                 >
+                  <Check size={13} aria-hidden="true" />
                   Pointer
                 </button>
               )}

@@ -3,8 +3,12 @@ import { addMonths, frequenceEnMois } from "./dateUtils";
 import { dateFinCourante, peutProlonger } from "./statusUtils";
 
 export function calculMontantInteret(deal: Deal): number {
-  const freqMois = frequenceEnMois(deal.frequence);
-  return deal.montant * (deal.rendementAnnuel / 100) * (freqMois / 12);
+  return calculerCouponEstime(deal.montant, deal.rendementAnnuel, deal.frequence);
+}
+
+export function calculerCouponEstime(montant: number, rendementAnnuel: number, frequence: Deal["frequence"]): number {
+  const freqMois = frequenceEnMois(frequence);
+  return montant * (rendementAnnuel / 100) * (freqMois / 12);
 }
 
 export function genererEcheances(deal: Deal, prolongations: Prolongation[]): Echeance[] {

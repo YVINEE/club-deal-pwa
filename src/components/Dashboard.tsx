@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { differenceInCalendarDays } from "date-fns";
-import { CalendarClock, Database, TrendingUp } from "lucide-react";
+import { CalendarClock, Check, Database, TrendingUp } from "lucide-react";
 import { formatDateFr } from "../utils/dateUtils";
 import { calculerSyntheseDashboard, DashboardDeal, PointCourbe } from "../utils/dashboard";
 import { StorageMode } from "../db/secureStorage";
@@ -37,6 +37,7 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
     [deals, suiviEncaissementsActif],
   );
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine").length;
+  const gainAbsolu = synthese.totalActuel - synthese.totalInvesti;
 
   return (
     <section aria-labelledby="dashboard-title" className="mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-[#141d2e] to-[#0e1422] p-4 text-white shadow-sm">
@@ -62,7 +63,7 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <strong className="text-2xl font-bold tabular-nums">{montant(synthese.totalActuel)}</strong>
           <span className="text-sm font-semibold text-emerald-300">
-            +{pourcentage(synthese.performanceBrute)}
+            +{pourcentage(synthese.performanceBrute)} · +{montant(gainAbsolu)}
           </span>
         </div>
         <div className="mt-1 text-xs text-slate-400">
@@ -157,8 +158,9 @@ function EcheanceBanner({
         <button
           type="button"
           onClick={() => onPointer(echeanceId)}
-          className="shrink-0 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm"
+          className="flex shrink-0 items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm"
         >
+          <Check size={14} aria-hidden="true" />
           Pointer
         </button>
       )}

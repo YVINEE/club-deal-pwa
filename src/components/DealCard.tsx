@@ -51,7 +51,7 @@ export function DealCard({
       </div>
 
       <div className="text-sm text-gray-500 mb-3">
-        {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% / an
+        {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
 
       {prochaineEcheanceDate && statut !== "termine" && (

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { CalendarClock, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { annulerEcheanceEncaissee, marquerEcheanceEncaissee } from "../db/repositories";
@@ -14,14 +14,15 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const { echeances, loading } = useToutesLesEcheances(refreshKey);
   const maintenant = new Date();
-  const echeancesTriees = useMemo(() => [...echeances].sort((a, b) => {
-    const categorie = (echeance: typeof a) => {
-      if (echeance.encaissee) return 2;
-      if (echeance.date <= maintenant) return 0;
-      return 1;
-    };
-    return categorie(a) - categorie(b) || a.date.getTime() - b.date.getTime();
-  }), [echeances, maintenant]);
+  const echeancesTriees = useMemo(
+    () => [...echeances].sort((a, b) => a.date.getTime() - b.date.getTime()),
+    [echeances],
+  );
+
+  function groupeMois(date: Date): string {
+    const libelle = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(date);
+    return libelle.charAt(0).toUpperCase() + libelle.slice(1);
+  }
 
   async function pointer(echeanceId: string) {
     await marquerEcheanceEncaissee(echeanceId);
@@ -46,10 +47,14 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
         <p className="py-8 text-center text-gray-500">Aucune échéance pour l’instant.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {echeancesTriees.map((echeance) => {
+          {echeancesTriees.map((echeance, index) => {
             const echue = echeance.date <= maintenant;
+            const groupe = groupeMois(echeance.date);
+            const groupePrecedent = index > 0 ? groupeMois(echeancesTriees[index - 1].date) : null;
             return (
-              <div key={echeance.id} className="rounded-xl border border-border bg-card p-3">
+              <Fragment key={echeance.id}>
+                {groupe !== groupePrecedent && <h3 className="mt-3 border-b border-border pb-2 text-sm font-semibold text-gray-500 first:mt-0">{groupe}</h3>}
+                <div className="rounded-xl border border-border bg-card p-3">
                 <div className="flex items-start justify-between gap-3">
                   <button
                     type="button"
@@ -77,11 +82,13 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
                     </button>
                   ) : echue ? (
                     <button type="button" onClick={() => pointer(echeance.id)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white">
+                      <Check size={13} aria-hidden="true" />
                       Pointer
                     </button>
                   ) : null)}
                 </div>
-              </div>
+                </div>
+              </Fragment>
             );
           })}
         </div>

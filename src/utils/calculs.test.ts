@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Deal, Prolongation } from "../types";
-import { calculMontantInteret, creerProlongation, genererEcheances } from "./calculs";
+import { calculerCouponEstime, calculMontantInteret, creerProlongation, genererEcheances } from "./calculs";
 
 function date(annee: number, mois: number, jour: number): Date {
   return new Date(annee, mois - 1, jour, 12);
@@ -32,6 +32,13 @@ describe("calculMontantInteret", () => {
 
   it("calcule les intérêts semestriels", () => {
     expect(calculMontantInteret(creerDeal({ frequence: "semestriel" }))).toBe(600);
+  });
+});
+
+describe("calculerCouponEstime", () => {
+  it("calcule le coupon à partir des valeurs du formulaire", () => {
+    expect(calculerCouponEstime(10000, 10, "trimestriel")).toBe(250);
+    expect(calculerCouponEstime(10000, 10, "semestriel")).toBe(500);
   });
 });
 
