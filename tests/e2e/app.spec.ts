@@ -37,6 +37,7 @@ async function fillDeal(page: Page, name = dealName) {
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  await expect(page.getByText("Fin prévue", { exact: true }).first()).toBeVisible();
 }
 
 test("crée, annule, modifie et revient à la liste des deals", async ({ page }) => {

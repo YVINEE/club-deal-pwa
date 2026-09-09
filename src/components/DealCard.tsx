@@ -58,6 +58,11 @@ export function DealCard({
         {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
 
+      <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <span>Fin prévue</span>
+        <span className="font-medium text-slate-700 dark:text-slate-300">{formatDateCourteFr(dateFin)}</span>
+      </div>
+
       {prochaineEcheanceDate && statut !== "termine" && (
         <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-sm dark:bg-white/5">
           <div className="min-w-0 border-r border-slate-200 pr-2 dark:border-white/10">
