@@ -152,15 +152,15 @@ test("active puis désactive les notifications d’échéances", async ({ page }
 test("active le chiffrement, recharge et déverrouille", async ({ page }) => {
   await openApp(page);
   await openSettings(page);
-  await page.getByRole("button", { name: "Activer le chiffrement" }).click();
-  await page.getByLabel("Mot de passe de chiffrement").fill("motdepasse-e2e");
+  await page.getByRole("button", { name: "Mettre un mot de passe" }).click();
+  await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-e2e");
   await page.getByLabel("Confirmer le mot de passe").fill("motdepasse-e2e");
-  await page.getByRole("button", { name: "Chiffrer la base" }).click();
-  await expect(page.getByText("Chiffrée", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Mettre le mot de passe" }).click();
+  await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Base locale chiffrée" })).toBeVisible();
-  await page.getByLabel("Mot de passe de chiffrement").fill("motdepasse-e2e");
+  await expect(page.getByRole("heading", { name: "Application protégée" })).toBeVisible();
+  await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-e2e");
   await page.getByRole("button", { name: "Déverrouiller" }).click();
   await expect(page.getByRole("heading", { name: "Paramètres", exact: true })).toBeVisible();
 });

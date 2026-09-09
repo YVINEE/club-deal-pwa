@@ -26,8 +26,8 @@ export function EncryptionLockScreen({ onUnlock }: EncryptionLockScreenProps) {
   return (
     <main className="fixed inset-0 z-40 flex min-h-screen items-center justify-center bg-background p-4">
       <form onSubmit={soumettre} className="w-full max-w-sm space-y-4 text-center">
-        <h1 className="text-xl font-semibold">Base locale chiffrée</h1>
-        <p className="text-sm text-gray-500">Saisissez le mot de passe de chiffrement pour continuer.</p>
+        <h1 className="text-xl font-semibold">Application protégée</h1>
+        <p className="text-sm text-gray-500">Saisissez votre mot de passe pour accéder aux données.</p>
         <Input
           type="password"
           autoFocus
@@ -37,7 +37,7 @@ export function EncryptionLockScreen({ onUnlock }: EncryptionLockScreenProps) {
             setMotDePasse(event.target.value);
             setErreur("");
           }}
-          aria-label="Mot de passe de chiffrement"
+          aria-label="Mot de passe"
         />
         {erreur && <p className="text-sm text-red-500" role="alert">{erreur}</p>}
         <Button type="submit" size="lg" className="w-full" disabled={chargement || motDePasse.length === 0}>

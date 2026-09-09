@@ -50,7 +50,7 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
           <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
             <Database size={13} aria-hidden="true" />
-            {storageMode === "encrypted" ? "Base locale chiffrée" : "Base locale non chiffrée"}
+            {storageMode === "encrypted" ? "Données protégées par mot de passe" : "Données non protégées"}
           </div>
         </div>
         <div className="rounded-full bg-blue-100 p-2 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">

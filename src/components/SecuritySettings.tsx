@@ -150,11 +150,11 @@ export function SecuritySettings({
           </div>
           <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium ${storageMode === "encrypted" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-            {storageMode === "encrypted" ? "Chiffrée" : "Non chiffrée"}
+            {storageMode === "encrypted" ? "Protégée" : "Non protégée"}
           </span>
         </div>
         <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">
-          {storageMode === "encrypted" ? "Base locale chiffrée par mot de passe." : "Base locale non chiffrée."}
+          {storageMode === "encrypted" ? "Données protégées par un mot de passe." : "Données non protégées par un mot de passe."}
         </p>
 
         {!actionChiffrement && (
@@ -166,7 +166,7 @@ export function SecuritySettings({
               className="w-full justify-center gap-2"
             >
               {storageMode === "encrypted" ? <LockKeyhole size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
-              {storageMode === "encrypted" ? "Désactiver le chiffrement" : "Activer le chiffrement"}
+              {storageMode === "encrypted" ? "Retirer le mot de passe" : "Mettre un mot de passe"}
             </Button>
             {storageMode === "encrypted" && (
               <Button type="button" variant="outline" onClick={() => setActionChiffrement("modifier")} className="w-full justify-center">
@@ -181,10 +181,10 @@ export function SecuritySettings({
             <Input
               type="password"
               autoComplete={actionChiffrement === "activer" ? "new-password" : "current-password"}
-              placeholder="Mot de passe de chiffrement"
+              placeholder={actionChiffrement === "activer" ? "Mot de passe" : "Mot de passe actuel"}
               value={motDePasse}
               onChange={(event) => setMotDePasse(event.target.value)}
-              aria-label="Mot de passe de chiffrement"
+              aria-label={actionChiffrement === "activer" ? "Mot de passe" : "Mot de passe actuel"}
             />
             {actionChiffrement === "activer" && (
               <Input
@@ -217,19 +217,19 @@ export function SecuritySettings({
               </>
             )}
             {erreurChiffrement && <p className="text-sm text-red-500 dark:text-red-400" role="alert">{erreurChiffrement}</p>}
-            <div className="flex gap-2">
-              <Button type="button" onClick={gererChiffrement}>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="button" onClick={gererChiffrement} className="w-full sm:w-auto">
                 {actionChiffrement === "activer"
-                  ? "Chiffrer la base"
+                  ? "Mettre le mot de passe"
                   : actionChiffrement === "modifier"
                     ? "Changer le mot de passe"
-                    : "Déchiffrer la base"}
+                    : "Retirer le mot de passe"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => { reinitialiserChiffrement(); setActionChiffrement(null); }}>
+              <Button type="button" variant="outline" onClick={() => { reinitialiserChiffrement(); setActionChiffrement(null); }} className="w-full sm:w-auto">
                 Annuler
               </Button>
             </div>
-            <p className="text-xs text-slate-500">Le mot de passe ne peut pas être récupéré.</p>
+            <p className="text-xs text-slate-500">Le mot de passe protège les données de cet appareil et ne peut pas être récupéré.</p>
           </div>
         )}
 

@@ -21,7 +21,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 - Thème sombre par défaut et thème clair disponible dans les paramètres.
 - Navigation mobile par onglets : Vue, Deals, Échéances et Paramètres.
 
-> Les données sont conservées localement sur l’appareil. Il n’y a pas de serveur de synchronisation. En cas d’activation du chiffrement, le mot de passe ne peut pas être récupéré par l’application.
+> Les données sont conservées localement sur l’appareil. Il n’y a pas de serveur de synchronisation. En cas d’activation de la protection par mot de passe, celui-ci ne peut pas être récupéré par l’application.
 
 ## Technologies
 
@@ -100,7 +100,7 @@ tests/e2e/                   # Parcours Playwright
 
 ## Sécurité et sauvegardes
 
-Le chiffrement protège les données stockées localement sur l’appareil, mais ne remplace pas une sauvegarde. Exportez régulièrement un fichier JSON et conservez-le dans un emplacement sûr. Les fichiers JSON chiffrés nécessitent leur mot de passe pour être importés.
+La protection par mot de passe protège les données stockées localement sur l’appareil, mais ne remplace pas une sauvegarde. Exportez régulièrement un fichier JSON et conservez-le dans un emplacement sûr. Les fichiers JSON protégés par mot de passe nécessitent ce mot de passe pour être importés.
 
 ## Notifications
 
