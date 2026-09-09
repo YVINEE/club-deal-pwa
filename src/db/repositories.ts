@@ -1,13 +1,14 @@
-import { db } from "./database";
 import { Deal, Prolongation } from "../types";
 import { genererEcheances, creerProlongation } from "../utils/calculs";
+import { enregistrerPortefeuille, lirePortefeuille } from "./secureStorage";
 
 async function recalculerEcheances(dealId: string): Promise<void> {
-  const deal = await db.deals.get(dealId);
+  const data = await lirePortefeuille();
+  const deal = data.deals.find((candidate) => candidate.id === dealId);
   if (!deal) return;
 
-  const prolongations = await db.prolongations.where("dealId").equals(dealId).toArray();
-  const anciennesEcheances = await db.echeances.where("dealId").equals(dealId).toArray();
+  const prolongations = data.prolongations.filter((prolongation) => prolongation.dealId === dealId);
+  const anciennesEcheances = data.echeances.filter((echeance) => echeance.dealId === dealId);
   const echeances = genererEcheances(deal, prolongations);
   const encaissements = new Map(
     anciennesEcheances.map((echeance) => [echeance.date.getTime() + "-" + echeance.montant, echeance.encaissee])
@@ -16,57 +17,65 @@ async function recalculerEcheances(dealId: string): Promise<void> {
     echeance.encaissee = encaissements.get(echeance.date.getTime() + "-" + echeance.montant) ?? false;
   });
 
-  await db.transaction("rw", db.echeances, async () => {
-    await db.echeances.where("dealId").equals(dealId).delete();
-    await db.echeances.bulkAdd(echeances);
-  });
+  data.echeances = [...data.echeances.filter((echeance) => echeance.dealId !== dealId), ...echeances];
+  await enregistrerPortefeuille(data);
 }
 
 export async function ajouterDeal(deal: Deal): Promise<void> {
-  await db.deals.add(deal);
+  const data = await lirePortefeuille();
+  data.deals.push(deal);
+  await enregistrerPortefeuille(data);
   await recalculerEcheances(deal.id);
 }
 
 export async function modifierDeal(deal: Deal): Promise<void> {
-  await db.deals.put(deal);
+  const data = await lirePortefeuille();
+  data.deals = data.deals.map((candidate) => (candidate.id === deal.id ? deal : candidate));
+  await enregistrerPortefeuille(data);
   await recalculerEcheances(deal.id);
 }
 
 export async function supprimerDeal(dealId: string): Promise<void> {
-  await db.transaction("rw", db.deals, db.prolongations, db.echeances, async () => {
-    await db.deals.delete(dealId);
-    await db.prolongations.where("dealId").equals(dealId).delete();
-    await db.echeances.where("dealId").equals(dealId).delete();
-  });
+  const data = await lirePortefeuille();
+  data.deals = data.deals.filter((deal) => deal.id !== dealId);
+  data.prolongations = data.prolongations.filter((prolongation) => prolongation.dealId !== dealId);
+  data.echeances = data.echeances.filter((echeance) => echeance.dealId !== dealId);
+  await enregistrerPortefeuille(data);
 }
 
 export async function prolongerDeal(dealId: string): Promise<void> {
-  const deal = await db.deals.get(dealId);
+  const data = await lirePortefeuille();
+  const deal = data.deals.find((candidate) => candidate.id === dealId);
   if (!deal) throw new Error(`Deal ${dealId} introuvable`);
 
-  const prolongationsExistantes = await db.prolongations.where("dealId").equals(dealId).toArray();
+  const prolongationsExistantes = data.prolongations.filter((prolongation) => prolongation.dealId === dealId);
   const nouvelleProlongation: Prolongation = creerProlongation(deal, prolongationsExistantes);
 
-  await db.prolongations.add(nouvelleProlongation);
+  data.prolongations.push(nouvelleProlongation);
+  await enregistrerPortefeuille(data);
   await recalculerEcheances(dealId);
 }
 
 export async function marquerEcheanceEncaissee(echeanceId: string): Promise<void> {
-  await db.transaction("rw", db.echeances, async () => {
-    const echeance = await db.echeances.get(echeanceId);
-    if (!echeance) throw new Error("Échéance introuvable");
-    if (echeance.date > new Date()) throw new Error("Cette échéance n'est pas encore échue");
-    await db.echeances.update(echeanceId, { encaissee: true });
-  });
+  const data = await lirePortefeuille();
+  const echeance = data.echeances.find((candidate) => candidate.id === echeanceId);
+  if (!echeance) throw new Error("Échéance introuvable");
+  if (echeance.date > new Date()) throw new Error("Cette échéance n'est pas encore échue");
+  echeance.encaissee = true;
+  await enregistrerPortefeuille(data);
 }
 
 export async function getDealsAvecEcheances() {
-  const deals = await db.deals.toArray();
+  const data = await lirePortefeuille();
   return Promise.all(
-    deals.map(async (deal) => ({
+    data.deals.map(async (deal) => ({
       deal,
-      prolongations: await db.prolongations.where("dealId").equals(deal.id).toArray(),
-      echeances: await db.echeances.where("dealId").equals(deal.id).sortBy("date"),
+      prolongations: data.prolongations
+        .filter((prolongation) => prolongation.dealId === deal.id)
+        .sort((a, b) => a.ordre - b.ordre),
+      echeances: data.echeances
+        .filter((echeance) => echeance.dealId === deal.id)
+        .sort((a, b) => a.date.getTime() - b.date.getTime()),
     }))
   );
 }

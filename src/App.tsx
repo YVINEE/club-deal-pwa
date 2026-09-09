@@ -4,21 +4,23 @@ import { useDeals } from "./hooks/useDeals";
 import { DealList } from "./components/DealList";
 import { DealDetail } from "./components/DealDetail";
 import { DealForm } from "./components/DealForm";
-import { PinLockScreen } from "./components/PinLockScreen";
-import { useAppLock } from "./hooks/useAppLock";
 import { Deal } from "./types";
+import { EncryptionLockScreen } from "./components/EncryptionLockScreen";
+import {
+  activerChiffrement,
+  changerMotDePasseChiffrement,
+  desactiverChiffrement,
+  deverrouillerStockage,
+  exporterJson,
+  getStorageMode,
+  importerJson,
+  ouvrirStockage,
+  StorageMode,
+} from "./db/secureStorage";
 
 type Theme = "light" | "dark";
 
 export default function App() {
-  const {
-    protectionActive,
-    verrouille,
-    deverrouiller,
-    activerProtection,
-    modifierPin,
-    desactiverProtection,
-  } = useAppLock();
   const [theme, setTheme] = useState<Theme>(() => {
     const themeEnregistre = localStorage.getItem("club-deal-theme");
     if (themeEnregistre === "light" || themeEnregistre === "dark") return themeEnregistre;
@@ -27,6 +29,12 @@ export default function App() {
   const [suiviEncaissementsActif, setSuiviEncaissementsActif] = useState(
     () => localStorage.getItem("club-deal-suivi-encaissements") === "true"
   );
+  const [storageMode, setStorageMode] = useState<StorageMode>(getStorageMode);
+  const [stockagePret, setStockagePret] = useState(false);
+
+  useEffect(() => {
+    localStorage.removeItem("club-deal-security");
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -37,13 +45,85 @@ export default function App() {
     localStorage.setItem("club-deal-suivi-encaissements", String(suiviEncaissementsActif));
   }, [suiviEncaissementsActif]);
 
+  useEffect(() => {
+    if (storageMode !== "plain") return;
+    ouvrirStockage("plain").then(() => setStockagePret(true)).catch(() => setStockagePret(false));
+  }, [storageMode]);
+
   function basculerTheme() {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }
 
+  async function deverrouillerBase(motDePasse: string): Promise<boolean> {
+    try {
+      await deverrouillerStockage(motDePasse);
+      setStockagePret(true);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function activerBaseChiffree(motDePasse: string): Promise<void> {
+    await activerChiffrement(motDePasse);
+    setStorageMode("encrypted");
+    setStockagePret(true);
+  }
+
+  async function desactiverBaseChiffree(motDePasse: string): Promise<void> {
+    await desactiverChiffrement(motDePasse);
+    setStorageMode("plain");
+    setStockagePret(true);
+  }
+
+  async function changerMotDePasseBase(ancien: string, nouveau: string): Promise<void> {
+    await changerMotDePasseChiffrement(ancien, nouveau);
+  }
+
+  async function telechargerJson(): Promise<void> {
+    try {
+      const contenu = await exporterJson();
+      const blob = new Blob([contenu], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const lien = document.createElement("a");
+      lien.href = url;
+      lien.download = "club-deal-sauvegarde.json";
+      lien.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Export impossible");
+    }
+  }
+
+  async function importerFichier(file: File): Promise<void> {
+    try {
+      const contenu = await file.text();
+      const entete = JSON.parse(contenu) as { encrypted?: boolean };
+      if (!window.confirm("Remplacer toutes les données locales par ce fichier ?")) return;
+      const motDePasse = entete.encrypted ? window.prompt("Mot de passe du fichier JSON") ?? undefined : undefined;
+      await importerJson(contenu, motDePasse);
+      window.location.reload();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Import impossible");
+    }
+  }
+
+  if (!stockagePret) {
+    return (
+      <>
+        {storageMode === "encrypted" ? (
+          <EncryptionLockScreen onUnlock={deverrouillerBase} />
+        ) : (
+          <main className="flex min-h-screen items-center justify-center text-sm text-gray-500">
+            Chargement des données...
+          </main>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
-      {verrouille && <PinLockScreen onUnlock={deverrouiller} />}
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route
@@ -52,12 +132,14 @@ export default function App() {
               <EcranListe
                 theme={theme}
                 onToggleTheme={basculerTheme}
-                protectionActive={protectionActive}
-                onActiverProtection={activerProtection}
-                onModifierPin={modifierPin}
-                onDesactiverProtection={desactiverProtection}
                 suiviEncaissementsActif={suiviEncaissementsActif}
                 onToggleSuiviEncaissements={setSuiviEncaissementsActif}
+                storageMode={storageMode}
+                onActiverChiffrement={activerBaseChiffree}
+                onDesactiverChiffrement={desactiverBaseChiffree}
+                onChangerMotDePasse={changerMotDePasseBase}
+                onExporterJson={telechargerJson}
+                onImporterJson={importerFichier}
               />
             }
           />
@@ -85,33 +167,39 @@ export default function App() {
 function EcranListe({
   theme,
   onToggleTheme,
-  protectionActive,
-  onActiverProtection,
-  onModifierPin,
-  onDesactiverProtection,
   suiviEncaissementsActif,
   onToggleSuiviEncaissements,
+  storageMode,
+  onActiverChiffrement,
+  onDesactiverChiffrement,
+  onChangerMotDePasse,
+  onExporterJson,
+  onImporterJson,
 }: {
   theme: Theme;
   onToggleTheme: () => void;
-  protectionActive: boolean;
-  onActiverProtection: (pin: string) => Promise<void>;
-  onModifierPin: (ancienPin: string, nouveauPin: string) => Promise<boolean>;
-  onDesactiverProtection: (pin: string) => Promise<boolean>;
   suiviEncaissementsActif: boolean;
   onToggleSuiviEncaissements: (actif: boolean) => void;
+  storageMode: StorageMode;
+  onActiverChiffrement: (motDePasse: string) => Promise<void>;
+  onDesactiverChiffrement: (motDePasse: string) => Promise<void>;
+  onChangerMotDePasse: (ancien: string, nouveau: string) => Promise<void>;
+  onExporterJson: () => Promise<void>;
+  onImporterJson: (file: File) => Promise<void>;
 }) {
   const navigate = useNavigate();
   return (
     <DealList
       theme={theme}
       onToggleTheme={onToggleTheme}
-      protectionActive={protectionActive}
-      onActiverProtection={onActiverProtection}
-      onModifierPin={onModifierPin}
-      onDesactiverProtection={onDesactiverProtection}
       suiviEncaissementsActif={suiviEncaissementsActif}
       onToggleSuiviEncaissements={onToggleSuiviEncaissements}
+      storageMode={storageMode}
+      onActiverChiffrement={onActiverChiffrement}
+      onDesactiverChiffrement={onDesactiverChiffrement}
+      onChangerMotDePasse={onChangerMotDePasse}
+      onExporterJson={onExporterJson}
+      onImporterJson={onImporterJson}
       onSelectDeal={(dealId) => navigate(`/deal/${dealId}`)}
       onAjouterDeal={() => navigate("/nouveau")}
     />

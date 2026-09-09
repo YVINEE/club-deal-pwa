@@ -3,11 +3,13 @@ import { differenceInCalendarDays } from "date-fns";
 import { CalendarClock, Database, TrendingUp } from "lucide-react";
 import { formatDateFr } from "../utils/dateUtils";
 import { calculerSyntheseDashboard, DashboardDeal, PointCourbe } from "../utils/dashboard";
+import { StorageMode } from "../db/secureStorage";
 
 interface DashboardProps {
   deals: DashboardDeal[];
   suiviEncaissementsActif: boolean;
   onPointer: (echeanceId: string) => Promise<void>;
+  storageMode: StorageMode;
 }
 
 const formatMontant = new Intl.NumberFormat("fr-FR", {
@@ -29,7 +31,7 @@ function pourcentage(value: number): string {
   return formatPourcentage.format(value) + " %";
 }
 
-export function Dashboard({ deals, suiviEncaissementsActif, onPointer }: DashboardProps) {
+export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMode }: DashboardProps) {
   const synthese = useMemo(
     () => calculerSyntheseDashboard(deals, new Date(), { suiviEncaissements: suiviEncaissementsActif }),
     [deals, suiviEncaissementsActif],
@@ -47,7 +49,7 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer }: Dashboa
           <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
             <Database size={13} aria-hidden="true" />
-            Données locales (Dexie)
+            {storageMode === "encrypted" ? "Base locale chiffrée" : "Base locale non chiffrée"}
           </div>
         </div>
         <div className="rounded-full bg-blue-500/15 p-2 text-blue-300">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Echeance } from "../types";
-import { db } from "../db/database";
+import { lirePortefeuille } from "../db/secureStorage";
 
 export function useEcheances(dealId: string, refreshKey: number = 0) {
   const [echeances, setEcheances] = useState<Echeance[]>([]);
@@ -9,7 +9,9 @@ export function useEcheances(dealId: string, refreshKey: number = 0) {
   const charger = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await db.echeances.where("dealId").equals(dealId).sortBy("date");
+      const result = (await lirePortefeuille()).echeances
+        .filter((echeance) => echeance.dealId === dealId)
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
       setEcheances(result);
     } catch (e) {
       console.error("Erreur lors du chargement des échéances", e);

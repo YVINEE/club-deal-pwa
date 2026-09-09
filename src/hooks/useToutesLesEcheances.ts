@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { db } from "../db/database";
 import { Echeance } from "../types";
+import { lirePortefeuille } from "../db/secureStorage";
 
 export interface EcheanceAvecDeal extends Echeance {
   nomDeal: string;
@@ -14,11 +14,13 @@ export function useToutesLesEcheances(refreshKey: number = 0) {
     setLoading(true);
     try {
       const maintenant = new Date();
-      const toutesEcheances = await db.echeances.where("date").aboveOrEqual(maintenant).sortBy("date");
+      const data = await lirePortefeuille();
+      const toutesEcheances = data.echeances
+        .filter((echeance) => echeance.date >= maintenant)
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
 
       const dealIds = [...new Set(toutesEcheances.map((e) => e.dealId))];
-      const deals = await db.deals.where("id").anyOf(dealIds).toArray();
-      const nomsParId = new Map(deals.map((d) => [d.id, d.nom]));
+      const nomsParId = new Map(data.deals.filter((deal) => dealIds.includes(deal.id)).map((deal) => [deal.id, deal.nom]));
 
       const enrichies = toutesEcheances.map((e) => ({
         ...e,

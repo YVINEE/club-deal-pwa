@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Prolongation } from "../types";
-import { db } from "../db/database";
+import { lirePortefeuille } from "../db/secureStorage";
 import { prolongerDeal } from "../db/repositories";
 
 export function useProlongations(dealId: string) {
@@ -12,7 +12,9 @@ export function useProlongations(dealId: string) {
   const charger = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await db.prolongations.where("dealId").equals(dealId).sortBy("ordre");
+      const result = (await lirePortefeuille()).prolongations
+        .filter((prolongation) => prolongation.dealId === dealId)
+        .sort((a, b) => a.ordre - b.ordre);
       setProlongations(result);
     } catch (e) {
       console.error("Erreur lors du chargement des prolongations", e);

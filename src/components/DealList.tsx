@@ -6,31 +6,36 @@ import { SecuritySettings } from "./SecuritySettings";
 import { Dashboard } from "./Dashboard";
 import { Plus, Settings } from "lucide-react";
 import { marquerEcheanceEncaissee } from "../db/repositories";
+import { StorageMode } from "../db/secureStorage";
 
 interface DealListProps {
   theme: "light" | "dark";
   onToggleTheme: () => void;
-  protectionActive: boolean;
-  onActiverProtection: (pin: string) => Promise<void>;
-  onModifierPin: (ancienPin: string, nouveauPin: string) => Promise<boolean>;
-  onDesactiverProtection: (pin: string) => Promise<boolean>;
   onSelectDeal: (dealId: string) => void;
   onAjouterDeal: () => void;
   suiviEncaissementsActif: boolean;
   onToggleSuiviEncaissements: (actif: boolean) => void;
+  storageMode: StorageMode;
+  onActiverChiffrement: (motDePasse: string) => Promise<void>;
+  onDesactiverChiffrement: (motDePasse: string) => Promise<void>;
+  onChangerMotDePasse: (ancien: string, nouveau: string) => Promise<void>;
+  onExporterJson: () => Promise<void>;
+  onImporterJson: (file: File) => Promise<void>;
 }
 
 export function DealList({
   theme,
   onToggleTheme,
-  protectionActive,
-  onActiverProtection,
-  onModifierPin,
-  onDesactiverProtection,
   onSelectDeal,
   onAjouterDeal,
   suiviEncaissementsActif,
   onToggleSuiviEncaissements,
+  storageMode,
+  onActiverChiffrement,
+  onDesactiverChiffrement,
+  onChangerMotDePasse,
+  onExporterJson,
+  onImporterJson,
 }: DealListProps) {
   const { deals, loading, error, rafraichir } = useDeals();
   const [reglagesOuverts, setReglagesOuverts] = useState(false);
@@ -64,12 +69,14 @@ export function DealList({
       </div>
       {reglagesOuverts && (
         <SecuritySettings
-          protectionActive={protectionActive}
-          onActiver={onActiverProtection}
-          onModifier={onModifierPin}
-          onDesactiver={onDesactiverProtection}
           suiviEncaissementsActif={suiviEncaissementsActif}
           onToggleSuiviEncaissements={onToggleSuiviEncaissements}
+          storageMode={storageMode}
+          onActiverChiffrement={onActiverChiffrement}
+          onDesactiverChiffrement={onDesactiverChiffrement}
+          onChangerMotDePasse={onChangerMotDePasse}
+          onExporterJson={onExporterJson}
+          onImporterJson={onImporterJson}
         />
       )}
       <Dashboard
@@ -79,6 +86,7 @@ export function DealList({
           await marquerEcheanceEncaissee(echeanceId);
           await rafraichir();
         }}
+        storageMode={storageMode}
       />
       {deals.length === 0 ? (
         <div className="p-8 text-center text-gray-500">

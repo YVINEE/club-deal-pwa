@@ -5,6 +5,7 @@ export class ClubDealDatabase extends Dexie {
   deals!: Table<Deal, string>;
   prolongations!: Table<Prolongation, string>;
   echeances!: Table<Echeance, string>;
+  vault!: Table<EncryptedVault, string>;
 
   constructor() {
     super("ClubDealDatabase");
@@ -27,7 +28,25 @@ export class ClubDealDatabase extends Dexie {
           echeance.encaissee = new Date(echeance.date) <= maintenant;
         });
       });
+
+    this.version(3).stores({
+      deals: "id, nom, dateDebut",
+      prolongations: "id, dealId, ordre",
+      echeances: "id, dealId, date",
+      vault: "id",
+    });
   }
+}
+
+export interface EncryptedVault {
+  id: string;
+  formatVersion: 1;
+  algorithm: "AES-GCM";
+  kdf: "PBKDF2-SHA-256";
+  iterations: number;
+  salt: string;
+  iv: string;
+  ciphertext: string;
 }
 
 export const db = new ClubDealDatabase();
