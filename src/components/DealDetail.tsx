@@ -7,6 +7,7 @@ import { ProlongationsTab } from "./ProlongationsTab";
 import { ExportTab } from "./ExportTab";
 import { ThemeToggle } from "./ThemeToggle";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { marquerEcheanceEncaissee } from "../db/repositories";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -26,14 +27,22 @@ interface DealDetailProps {
   onToggleTheme: () => void;
   onRetour: () => void;
   onModifier: () => void;
+  suiviEncaissementsActif: boolean;
 }
 
-export function DealDetail({ dealId, theme, onToggleTheme, onRetour, onModifier }: DealDetailProps) {
+export function DealDetail({
+  dealId,
+  theme,
+  onToggleTheme,
+  onRetour,
+  onModifier,
+  suiviEncaissementsActif,
+}: DealDetailProps) {
   const { deals, supprimer } = useDeals();
   const dealInfo = deals.find((d) => d.deal.id === dealId);
 
   const { prolongations, prolonger, error: erreurProlongation, refreshKey } = useProlongations(dealId);
-  const { echeances, loading: chargementEcheances } = useEcheances(dealId, refreshKey);
+  const { echeances, loading: chargementEcheances, rafraichir: rafraichirEcheances } = useEcheances(dealId, refreshKey);
 
   const [onglet, setOnglet] = useState<Onglet>("echeances");
   const [confirmationSuppression, setConfirmationSuppression] = useState(false);
@@ -48,6 +57,11 @@ export function DealDetail({ dealId, theme, onToggleTheme, onRetour, onModifier 
     await supprimer(dealId);
     setConfirmationSuppression(false);
     onRetour();
+  }
+
+  async function pointerEcheance(echeanceId: string) {
+    await marquerEcheanceEncaissee(echeanceId);
+    await rafraichirEcheances();
   }
 
   return (
@@ -76,7 +90,14 @@ export function DealDetail({ dealId, theme, onToggleTheme, onRetour, onModifier 
       </div>
 
       <div className="p-4">
-        {onglet === "echeances" && <EcheancesTab echeances={echeances} loading={chargementEcheances} />}
+        {onglet === "echeances" && (
+          <EcheancesTab
+            echeances={echeances}
+            loading={chargementEcheances}
+            suiviEncaissementsActif={suiviEncaissementsActif}
+            onPointer={pointerEcheance}
+          />
+        )}
         {onglet === "prolongations" && (
           <ProlongationsTab
             deal={deal}

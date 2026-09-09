@@ -20,8 +20,8 @@ describe("calculerSyntheseDashboard", () => {
   it("calcule les montants acquis et futurs", () => {
     const premier = deal(10000, "2025-01-01");
     premier.echeances = [
-      { id: "past", dealId: premier.deal.id, date: new Date("2025-04-01"), montant: 200 },
-      { id: "future", dealId: premier.deal.id, date: new Date("2026-04-01"), montant: 200 },
+      { id: "past", dealId: premier.deal.id, date: new Date("2025-04-01"), montant: 200, encaissee: false },
+      { id: "future", dealId: premier.deal.id, date: new Date("2026-04-01"), montant: 200, encaissee: false },
     ];
 
     expect(calculerSyntheseDashboard([premier], new Date("2025-06-01"))).toMatchObject({
@@ -38,14 +38,31 @@ describe("calculerSyntheseDashboard", () => {
   it("génère une courbe cumulée et identifie la prochaine échéance", () => {
     const premier = deal(1000, "2025-01-01");
     premier.echeances = [
-      { id: "past", dealId: premier.deal.id, date: new Date("2025-02-01"), montant: 10 },
-      { id: "future", dealId: premier.deal.id, date: new Date("2025-08-01"), montant: 10 },
+      { id: "past", dealId: premier.deal.id, date: new Date("2025-02-01"), montant: 10, encaissee: false },
+      { id: "future", dealId: premier.deal.id, date: new Date("2025-08-01"), montant: 10, encaissee: false },
     ];
 
     const synthese = calculerSyntheseDashboard([premier], new Date("2025-06-01"));
 
     expect(synthese.prochaineEcheance?.id).toBe("future");
     expect(synthese.pointsCourbe.map((point) => point.valeur)).toEqual([1000, 1010, 1020]);
+    expect(synthese.pointsCourbe.map((point) => point.projection)).toEqual([false, false, true]);
+  });
+
+  it("utilise les statuts d'encaissement quand le suivi est actif", () => {
+    const premier = deal(1000, "2025-01-01");
+    premier.echeances = [
+      { id: "pointe", dealId: premier.deal.id, date: new Date("2025-02-01"), montant: 10, encaissee: true },
+      { id: "a-pointer", dealId: premier.deal.id, date: new Date("2025-03-01"), montant: 10, encaissee: false },
+    ];
+
+    const synthese = calculerSyntheseDashboard([premier], new Date("2025-06-01"), {
+      suiviEncaissements: true,
+    });
+
+    expect(synthese.interetsAcquis).toBe(10);
+    expect(synthese.interetsFuturs).toBe(10);
+    expect(synthese.prochaineEcheance?.id).toBe("a-pointer");
     expect(synthese.pointsCourbe.map((point) => point.projection)).toEqual([false, false, true]);
   });
 });

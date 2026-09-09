@@ -27,4 +27,5 @@ export interface Echeance {
   dealId: string;
   date: Date;
   montant: number; // toujours un versement d'intérêt
+  encaissee: boolean;
 }

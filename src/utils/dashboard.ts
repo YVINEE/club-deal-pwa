@@ -31,14 +31,16 @@ function arrondirMontant(montant: number): number {
 
 export function calculerSyntheseDashboard(
   deals: DashboardDeal[],
-  maintenant: Date = new Date()
+  maintenant: Date = new Date(),
+  options: { suiviEncaissements?: boolean } = {}
 ): SyntheseDashboard {
+  const suiviEncaissements = options.suiviEncaissements === true;
   const echeances = deals.flatMap(({ echeances: dealEcheances }) => dealEcheances);
   const interetsAcquis = echeances
-    .filter((echeance) => echeance.date <= maintenant)
+    .filter((echeance) => (suiviEncaissements ? echeance.encaissee : echeance.date <= maintenant))
     .reduce((total, echeance) => total + echeance.montant, 0);
   const interetsFuturs = echeances
-    .filter((echeance) => echeance.date > maintenant)
+    .filter((echeance) => (suiviEncaissements ? !echeance.encaissee : echeance.date > maintenant))
     .reduce((total, echeance) => total + echeance.montant, 0);
   const totalInvesti = deals.reduce((total, { deal }) => total + deal.montant, 0);
   const rendementMoyenPondere =
@@ -46,7 +48,7 @@ export function calculerSyntheseDashboard(
       ? 0
       : deals.reduce((total, { deal }) => total + deal.montant * deal.rendementAnnuel, 0) / totalInvesti;
   const prochaineEcheance = echeances
-    .filter((echeance) => echeance.date > maintenant)
+    .filter((echeance) => (suiviEncaissements ? !echeance.encaissee : echeance.date > maintenant))
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
 
   return {
@@ -61,21 +63,30 @@ export function calculerSyntheseDashboard(
     prochaineEcheanceDealNom: deals.find(({ echeances: dealEcheances }) =>
       dealEcheances.some((echeance) => echeance.id === prochaineEcheance?.id)
     )?.deal.nom,
-    pointsCourbe: creerPointsCourbe(deals, maintenant),
+    pointsCourbe: creerPointsCourbe(deals, maintenant, options),
   };
 }
 
-export function creerPointsCourbe(deals: DashboardDeal[], maintenant: Date = new Date()): PointCourbe[] {
+export function creerPointsCourbe(
+  deals: DashboardDeal[],
+  maintenant: Date = new Date(),
+  options: { suiviEncaissements?: boolean } = {}
+): PointCourbe[] {
+  const suiviEncaissements = options.suiviEncaissements === true;
   const evenements = deals.flatMap(({ deal, echeances }) => [
-    { date: deal.dateDebut, variation: deal.montant },
-    ...echeances.map((echeance) => ({ date: echeance.date, variation: echeance.montant })),
+    { date: deal.dateDebut, variation: deal.montant, projection: false },
+    ...echeances.map((echeance) => ({
+      date: echeance.date,
+      variation: echeance.montant,
+      projection: suiviEncaissements ? !echeance.encaissee : echeance.date > maintenant,
+    })),
   ]);
 
   evenements.sort((a, b) => a.date.getTime() - b.date.getTime());
 
   let valeur = 0;
-  return evenements.map(({ date, variation }) => {
+  return evenements.map(({ date, variation, projection }) => {
     valeur = arrondirMontant(valeur + variation);
-    return { date, valeur, projection: date > maintenant };
+    return { date, valeur, projection };
   });
 }

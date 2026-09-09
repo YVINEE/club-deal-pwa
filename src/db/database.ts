@@ -14,6 +14,19 @@ export class ClubDealDatabase extends Dexie {
       prolongations: "id, dealId, ordre",
       echeances: "id, dealId, date",
     });
+
+    this.version(2)
+      .stores({
+        deals: "id, nom, dateDebut",
+        prolongations: "id, dealId, ordre",
+        echeances: "id, dealId, date",
+      })
+      .upgrade((transaction) => {
+        const maintenant = new Date();
+        return transaction.table("echeances").toCollection().modify((echeance: Echeance) => {
+          echeance.encaissee = new Date(echeance.date) <= maintenant;
+        });
+      });
   }
 }
 

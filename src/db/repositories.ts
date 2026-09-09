@@ -7,7 +7,14 @@ async function recalculerEcheances(dealId: string): Promise<void> {
   if (!deal) return;
 
   const prolongations = await db.prolongations.where("dealId").equals(dealId).toArray();
+  const anciennesEcheances = await db.echeances.where("dealId").equals(dealId).toArray();
   const echeances = genererEcheances(deal, prolongations);
+  const encaissements = new Map(
+    anciennesEcheances.map((echeance) => [echeance.date.getTime() + "-" + echeance.montant, echeance.encaissee])
+  );
+  echeances.forEach((echeance) => {
+    echeance.encaissee = encaissements.get(echeance.date.getTime() + "-" + echeance.montant) ?? false;
+  });
 
   await db.transaction("rw", db.echeances, async () => {
     await db.echeances.where("dealId").equals(dealId).delete();
@@ -42,6 +49,15 @@ export async function prolongerDeal(dealId: string): Promise<void> {
 
   await db.prolongations.add(nouvelleProlongation);
   await recalculerEcheances(dealId);
+}
+
+export async function marquerEcheanceEncaissee(echeanceId: string): Promise<void> {
+  await db.transaction("rw", db.echeances, async () => {
+    const echeance = await db.echeances.get(echeanceId);
+    if (!echeance) throw new Error("Échéance introuvable");
+    if (echeance.date > new Date()) throw new Error("Cette échéance n'est pas encore échue");
+    await db.echeances.update(echeanceId, { encaissee: true });
+  });
 }
 
 export async function getDealsAvecEcheances() {

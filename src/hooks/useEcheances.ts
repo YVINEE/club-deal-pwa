@@ -23,5 +23,5 @@ export function useEcheances(dealId: string, refreshKey: number = 0) {
     // refreshKey force un rechargement quand une prolongation est ajoutée ailleurs
   }, [charger, refreshKey]);
 
-  return { echeances, loading };
+  return { echeances, loading, rafraichir: charger };
 }

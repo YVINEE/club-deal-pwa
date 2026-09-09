@@ -24,11 +24,18 @@ export default function App() {
     if (themeEnregistre === "light" || themeEnregistre === "dark") return themeEnregistre;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
+  const [suiviEncaissementsActif, setSuiviEncaissementsActif] = useState(
+    () => localStorage.getItem("club-deal-suivi-encaissements") === "true"
+  );
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("club-deal-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem("club-deal-suivi-encaissements", String(suiviEncaissementsActif));
+  }, [suiviEncaissementsActif]);
 
   function basculerTheme() {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
@@ -49,10 +56,21 @@ export default function App() {
                 onActiverProtection={activerProtection}
                 onModifierPin={modifierPin}
                 onDesactiverProtection={desactiverProtection}
+                suiviEncaissementsActif={suiviEncaissementsActif}
+                onToggleSuiviEncaissements={setSuiviEncaissementsActif}
               />
             }
           />
-          <Route path="/deal/:dealId" element={<EcranDetail theme={theme} onToggleTheme={basculerTheme} />} />
+          <Route
+            path="/deal/:dealId"
+            element={
+              <EcranDetail
+                theme={theme}
+                onToggleTheme={basculerTheme}
+                suiviEncaissementsActif={suiviEncaissementsActif}
+              />
+            }
+          />
           <Route path="/nouveau" element={<EcranFormulaire theme={theme} onToggleTheme={basculerTheme} />} />
           <Route
             path="/deal/:dealId/modifier"
@@ -71,6 +89,8 @@ function EcranListe({
   onActiverProtection,
   onModifierPin,
   onDesactiverProtection,
+  suiviEncaissementsActif,
+  onToggleSuiviEncaissements,
 }: {
   theme: Theme;
   onToggleTheme: () => void;
@@ -78,6 +98,8 @@ function EcranListe({
   onActiverProtection: (pin: string) => Promise<void>;
   onModifierPin: (ancienPin: string, nouveauPin: string) => Promise<boolean>;
   onDesactiverProtection: (pin: string) => Promise<boolean>;
+  suiviEncaissementsActif: boolean;
+  onToggleSuiviEncaissements: (actif: boolean) => void;
 }) {
   const navigate = useNavigate();
   return (
@@ -88,13 +110,23 @@ function EcranListe({
       onActiverProtection={onActiverProtection}
       onModifierPin={onModifierPin}
       onDesactiverProtection={onDesactiverProtection}
+      suiviEncaissementsActif={suiviEncaissementsActif}
+      onToggleSuiviEncaissements={onToggleSuiviEncaissements}
       onSelectDeal={(dealId) => navigate(`/deal/${dealId}`)}
       onAjouterDeal={() => navigate("/nouveau")}
     />
   );
 }
 
-function EcranDetail({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
+function EcranDetail({
+  theme,
+  onToggleTheme,
+  suiviEncaissementsActif,
+}: {
+  theme: Theme;
+  onToggleTheme: () => void;
+  suiviEncaissementsActif: boolean;
+}) {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
   if (!dealId) return null;
@@ -104,6 +136,7 @@ function EcranDetail({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: ()
       dealId={dealId}
       theme={theme}
       onToggleTheme={onToggleTheme}
+      suiviEncaissementsActif={suiviEncaissementsActif}
       onRetour={() => navigate("/")}
       onModifier={() => navigate(`/deal/${dealId}/modifier`)}
     />

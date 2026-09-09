@@ -53,6 +53,7 @@ function genererEcheancesPourPeriode(
       dealId,
       date: dateCourante,
       montant: montantInteret,
+      encaissee: false,
     });
     dateCourante = addMonths(dateCourante, freqMois);
   }

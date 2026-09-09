@@ -5,6 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { SecuritySettings } from "./SecuritySettings";
 import { Dashboard } from "./Dashboard";
 import { Plus, Settings } from "lucide-react";
+import { marquerEcheanceEncaissee } from "../db/repositories";
 
 interface DealListProps {
   theme: "light" | "dark";
@@ -15,6 +16,8 @@ interface DealListProps {
   onDesactiverProtection: (pin: string) => Promise<boolean>;
   onSelectDeal: (dealId: string) => void;
   onAjouterDeal: () => void;
+  suiviEncaissementsActif: boolean;
+  onToggleSuiviEncaissements: (actif: boolean) => void;
 }
 
 export function DealList({
@@ -26,8 +29,10 @@ export function DealList({
   onDesactiverProtection,
   onSelectDeal,
   onAjouterDeal,
+  suiviEncaissementsActif,
+  onToggleSuiviEncaissements,
 }: DealListProps) {
-  const { deals, loading, error } = useDeals();
+  const { deals, loading, error, rafraichir } = useDeals();
   const [reglagesOuverts, setReglagesOuverts] = useState(false);
 
   if (loading) {
@@ -63,9 +68,18 @@ export function DealList({
           onActiver={onActiverProtection}
           onModifier={onModifierPin}
           onDesactiver={onDesactiverProtection}
+          suiviEncaissementsActif={suiviEncaissementsActif}
+          onToggleSuiviEncaissements={onToggleSuiviEncaissements}
         />
       )}
-      <Dashboard deals={deals} />
+      <Dashboard
+        deals={deals}
+        suiviEncaissementsActif={suiviEncaissementsActif}
+        onPointer={async (echeanceId) => {
+          await marquerEcheanceEncaissee(echeanceId);
+          await rafraichir();
+        }}
+      />
       {deals.length === 0 ? (
         <div className="p-8 text-center text-gray-500">
           Aucun deal pour l'instant. Ajoutez-en un avec le bouton +.

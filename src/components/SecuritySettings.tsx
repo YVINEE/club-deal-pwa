@@ -7,6 +7,8 @@ type ActionProtection = "activer" | "modifier" | "desactiver" | null;
 
 interface SecuritySettingsProps {
   protectionActive: boolean;
+  suiviEncaissementsActif: boolean;
+  onToggleSuiviEncaissements: (actif: boolean) => void;
   onActiver: (pin: string) => Promise<void>;
   onModifier: (ancienPin: string, nouveauPin: string) => Promise<boolean>;
   onDesactiver: (pin: string) => Promise<boolean>;
@@ -14,6 +16,8 @@ interface SecuritySettingsProps {
 
 export function SecuritySettings({
   protectionActive,
+  suiviEncaissementsActif,
+  onToggleSuiviEncaissements,
   onActiver,
   onModifier,
   onDesactiver,
@@ -70,6 +74,22 @@ export function SecuritySettings({
 
   return (
     <section className="border-b bg-background p-4 space-y-3">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold">Suivi des encaissements</h2>
+          <p className="text-sm text-gray-500">
+            Activez le pointage manuel des échéances échues.
+          </p>
+        </div>
+        <input
+          type="checkbox"
+          checked={suiviEncaissementsActif}
+          onChange={(event) => onToggleSuiviEncaissements(event.target.checked)}
+          aria-label="Activer le suivi des encaissements"
+          className="mt-1 h-5 w-5 accent-emerald-600"
+        />
+      </div>
+
       <div>
         <h2 className="font-semibold">Protection par PIN</h2>
         <p className="text-sm text-gray-500">

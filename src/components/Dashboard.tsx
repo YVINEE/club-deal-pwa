@@ -6,6 +6,8 @@ import { calculerSyntheseDashboard, DashboardDeal, PointCourbe } from "../utils/
 
 interface DashboardProps {
   deals: DashboardDeal[];
+  suiviEncaissementsActif: boolean;
+  onPointer: (echeanceId: string) => Promise<void>;
 }
 
 const formatMontant = new Intl.NumberFormat("fr-FR", {
@@ -27,8 +29,11 @@ function pourcentage(value: number): string {
   return formatPourcentage.format(value) + " %";
 }
 
-export function Dashboard({ deals }: DashboardProps) {
-  const synthese = useMemo(() => calculerSyntheseDashboard(deals), [deals]);
+export function Dashboard({ deals, suiviEncaissementsActif, onPointer }: DashboardProps) {
+  const synthese = useMemo(
+    () => calculerSyntheseDashboard(deals, new Date(), { suiviEncaissements: suiviEncaissementsActif }),
+    [deals, suiviEncaissementsActif],
+  );
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine").length;
 
   return (
@@ -81,6 +86,9 @@ export function Dashboard({ deals }: DashboardProps) {
           date={synthese.prochaineEcheance.date}
           montantEcheance={synthese.prochaineEcheance.montant}
           nomDeal={synthese.prochaineEcheanceDealNom}
+          echeanceId={synthese.prochaineEcheance.id}
+          suiviEncaissementsActif={suiviEncaissementsActif}
+          onPointer={onPointer}
         />
       )}
 
@@ -110,13 +118,26 @@ function EcheanceBanner({
   date,
   montantEcheance,
   nomDeal,
+  echeanceId,
+  suiviEncaissementsActif,
+  onPointer,
 }: {
   date: Date;
   montantEcheance: number;
   nomDeal?: string;
+  echeanceId: string;
+  suiviEncaissementsActif: boolean;
+  onPointer: (echeanceId: string) => Promise<void>;
 }) {
-  const jours = Math.max(0, differenceInCalendarDays(date, new Date()));
-  const delai = jours === 0 ? "Aujourd’hui" : jours === 1 ? "Demain" : "Dans " + jours + " jours";
+  const jours = differenceInCalendarDays(date, new Date());
+  const delai =
+    jours < 0
+      ? "En retard de " + Math.abs(jours) + " jour" + (Math.abs(jours) > 1 ? "s" : "")
+      : jours === 0
+        ? "Aujourd’hui"
+        : jours === 1
+          ? "Demain"
+          : "Dans " + jours + " jours";
 
   return (
     <div className="mt-4 flex items-center gap-3 rounded-xl border border-blue-400/20 bg-blue-500/10 p-3">
@@ -130,6 +151,15 @@ function EcheanceBanner({
         </div>
         {nomDeal && <div className="truncate text-xs text-slate-400">{nomDeal}</div>}
       </div>
+      {suiviEncaissementsActif && date <= new Date() && (
+        <button
+          type="button"
+          onClick={() => onPointer(echeanceId)}
+          className="shrink-0 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm"
+        >
+          Pointer
+        </button>
+      )}
     </div>
   );
 }
