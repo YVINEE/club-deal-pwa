@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { differenceInCalendarDays } from "date-fns";
 import { CalendarClock, Check, Database, TrendingUp } from "lucide-react";
 import { formatDateFr } from "../utils/dateUtils";
-import { calculerSyntheseDashboard, DashboardDeal, PointCourbe } from "../utils/dashboard";
+import { calculerSyntheseDashboard, DashboardDeal, filtrerPointsCourbe, PeriodeCourbe, PointCourbe } from "../utils/dashboard";
 import { StorageMode } from "../db/secureStorage";
 
 interface DashboardProps {
@@ -143,14 +143,15 @@ function EcheanceBanner({
           : "Dans " + jours + " jours";
 
   return (
-    <div className="mt-4 flex items-center gap-3 rounded-xl border border-blue-400/20 bg-blue-500/10 p-3">
+    <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-xl border border-blue-400/20 bg-blue-500/10 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
       <div className="rounded-full bg-blue-400/15 p-2 text-blue-300">
         <CalendarClock size={18} aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-xs font-medium uppercase tracking-[0.04em] text-blue-200">{delai}</div>
-        <div className="truncate text-sm font-semibold text-white">
-          {formatDateFr(date)} — {montant(montantEcheance)}
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-semibold text-white">
+          <span className="whitespace-nowrap">{formatDateFr(date)}</span>
+          <span className="whitespace-nowrap text-emerald-300">Coupon : {montant(montantEcheance)}</span>
         </div>
         {nomDeal && <div className="truncate text-xs text-slate-400">{nomDeal}</div>}
       </div>
@@ -158,7 +159,7 @@ function EcheanceBanner({
         <button
           type="button"
           onClick={() => onPointer(echeanceId)}
-          className="flex shrink-0 items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm"
+          className="col-span-2 flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:w-auto"
         >
           <Check size={14} aria-hidden="true" />
           Pointer
@@ -169,14 +170,10 @@ function EcheanceBanner({
 }
 
 function Courbe({ points }: { points: PointCourbe[] }) {
-  const [periode, setPeriode] = useState<"tout" | "2030">("tout");
-  const pointsAffiches = useMemo(
-    () => (periode === "2030" ? points.filter((point) => point.date.getFullYear() <= 2030) : points),
-    [periode, points],
-  );
-  const pointsCourbe = pointsAffiches.length >= 2 ? pointsAffiches : points;
+  const [periode, setPeriode] = useState<PeriodeCourbe>("tout");
+  const pointsCourbe = filtrerPointsCourbe(points, periode, new Date());
 
-  if (points.length < 2) return null;
+  if (pointsCourbe.length < 2) return null;
 
   const largeur = 640;
   const hauteur = 190;
@@ -186,7 +183,7 @@ function Courbe({ points }: { points: PointCourbe[] }) {
   const max = Math.max(...valeurs);
   const amplitude = max - min || 1;
   const position = (point: PointCourbe, index: number) => {
-    const x = marge + (index / (points.length - 1)) * (largeur - marge * 2);
+    const x = marge + (index / (pointsCourbe.length - 1)) * (largeur - marge * 2);
     const y = hauteur - marge - ((point.valeur - min) / amplitude) * (hauteur - marge * 2);
     return { x, y };
   };
@@ -217,14 +214,14 @@ function Courbe({ points }: { points: PointCourbe[] }) {
       <div className="mb-1 flex items-center justify-between">
         <div className="text-sm font-medium">Trajectoire du portefeuille</div>
         <div className="flex gap-1 rounded-full bg-black/10 p-0.5 text-[11px]">
-          {(["tout", "2030"] as const).map((option) => (
+          {(["tout", "1a"] as const).map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => setPeriode(option)}
               className={"rounded-full px-2 py-1 transition-colors " + (periode === option ? "bg-blue-500/20 text-blue-200" : "text-slate-500")}
             >
-              {option === "tout" ? "Tout" : "2030"}
+              {option === "tout" ? "Tout" : "1A"}
             </button>
           ))}
         </div>
@@ -254,10 +251,18 @@ function Courbe({ points }: { points: PointCourbe[] }) {
           <polyline points={ligneProjection} fill="none" stroke="#a855f7" strokeWidth="2.5" strokeDasharray="7 5" strokeLinecap="round" strokeLinejoin="round" />
         )}
       </svg>
-      <div className="flex justify-between text-[11px] text-slate-500">
-        <span>{formatDateFr(points[0].date)}</span>
-        <span className="text-slate-400">Aujourd’hui</span>
-        <span>{formatDateFr(points[points.length - 1].date)}</span>
+      <div className="mt-2 grid grid-cols-3 items-end text-[11px] text-slate-500">
+        <div>
+          <div className="uppercase tracking-wide">Départ</div>
+          <div className="mt-1 text-sm font-semibold text-slate-300">{montant(pointsCourbe[0].valeur)}</div>
+          <div>{formatDateFr(pointsCourbe[0].date)}</div>
+        </div>
+        <div className="pb-1 text-center text-slate-400">Aujourd’hui</div>
+        <div className="text-right">
+          <div className="uppercase tracking-wide">Fin de période</div>
+          <div className="mt-1 text-sm font-semibold text-slate-300">{montant(pointsCourbe[pointsCourbe.length - 1].valeur)}</div>
+          <div>{formatDateFr(pointsCourbe[pointsCourbe.length - 1].date)}</div>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculerSyntheseDashboard, DashboardDeal } from "./dashboard";
+import { calculerSyntheseDashboard, DashboardDeal, filtrerPointsCourbe } from "./dashboard";
 
 const deal = (montant: number, dateDebut: string): DashboardDeal => ({
   deal: {
@@ -64,5 +64,22 @@ describe("calculerSyntheseDashboard", () => {
     expect(synthese.interetsFuturs).toBe(10);
     expect(synthese.prochaineEcheance?.id).toBe("a-pointer");
     expect(synthese.pointsCourbe.map((point) => point.projection)).toEqual([false, false, true]);
+  });
+});
+
+describe("filtrerPointsCourbe", () => {
+  it("conserve le dernier historique et les 12 prochains mois", () => {
+    const points = [
+      { date: new Date("2025-01-01"), valeur: 1000, projection: false },
+      { date: new Date("2025-06-01"), valeur: 1100, projection: false },
+      { date: new Date("2026-03-01"), valeur: 1200, projection: true },
+      { date: new Date("2027-01-01"), valeur: 1300, projection: true },
+    ];
+
+    expect(filtrerPointsCourbe(points, "1a", new Date("2025-06-15")).map((point) => point.date.toISOString().slice(0, 10))).toEqual([
+      "2025-06-01",
+      "2026-03-01",
+    ]);
+    expect(filtrerPointsCourbe(points, "tout", new Date("2025-06-15"))).toEqual(points);
   });
 });

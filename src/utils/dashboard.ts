@@ -12,6 +12,8 @@ export interface PointCourbe {
   projection: boolean;
 }
 
+export type PeriodeCourbe = "tout" | "1a";
+
 export interface SyntheseDashboard {
   totalInvesti: number;
   interetsAcquis: number;
@@ -89,4 +91,20 @@ export function creerPointsCourbe(
     valeur = arrondirMontant(valeur + variation);
     return { date, valeur, projection };
   });
+}
+
+export function filtrerPointsCourbe(
+  points: PointCourbe[],
+  periode: PeriodeCourbe,
+  maintenant: Date,
+): PointCourbe[] {
+  if (periode === "tout") return points;
+
+  const limite = new Date(maintenant);
+  limite.setFullYear(limite.getFullYear() + 1);
+  const historiques = points.filter((point) => !point.projection && point.date <= maintenant);
+  const ancrage = historiques[historiques.length - 1];
+  const futurs = points.filter((point) => point.date > maintenant && point.date <= limite);
+
+  return ancrage ? [ancrage, ...futurs] : futurs;
 }
