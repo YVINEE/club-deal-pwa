@@ -1,7 +1,7 @@
 import { Deal, StatutDeal } from "../types";
-import { differenceInCalendarMonths } from "date-fns";
-import { Clock3 } from "lucide-react";
-import { formatDateFr } from "../utils/dateUtils";
+import { differenceInCalendarDays, differenceInCalendarMonths } from "date-fns";
+import { ArrowDownToLine, CalendarDays, Clock3 } from "lucide-react";
+import { formatDateCourteFr, formatDateFr } from "../utils/dateUtils";
 
 interface DealCardProps {
   deal: Deal;
@@ -12,10 +12,10 @@ interface DealCardProps {
   onClick: () => void;
 }
 
-const BADGE_CONFIG: Record<StatutDeal, { emoji: string; label: string; couleur: string }> = {
-  actif: { emoji: "🟢", label: "Actif", couleur: "text-green-600" },
-  enProlongation: { emoji: "🟡", label: "En prolongation", couleur: "text-yellow-600" },
-  termine: { emoji: "🔴", label: "Terminé", couleur: "text-red-600" },
+const BADGE_CONFIG: Record<StatutDeal, { label: string; dot: string }> = {
+  actif: { label: "Actif", dot: "bg-emerald-400" },
+  enProlongation: { label: "En prolongation", dot: "bg-amber-400" },
+  termine: { label: "Terminé", dot: "bg-red-400" },
 };
 
 export function DealCard({
@@ -31,6 +31,9 @@ export function DealCard({
   const dureeMois = Math.max(1, differenceInCalendarMonths(dateFin, deal.dateDebut));
   const moisEcoules = Math.min(dureeMois, Math.max(0, differenceInCalendarMonths(new Date(), deal.dateDebut)));
   const progressionArrondie = Math.round(progression);
+  const joursAvantEcheance = prochaineEcheanceDate
+    ? differenceInCalendarDays(prochaineEcheanceDate, new Date())
+    : undefined;
   const badgeClasses =
     statut === "enProlongation"
       ? "bg-amber-400/10 text-amber-300"
@@ -46,7 +49,8 @@ export function DealCard({
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold text-lg">{deal.nom}</h3>
         <span className={"rounded-full px-2 py-1 text-xs font-medium " + badgeClasses}>
-          {badge.emoji} {badge.label}
+          <span className={"mr-1 inline-block h-1.5 w-1.5 rounded-full " + badge.dot} aria-hidden="true" />
+          {badge.label}
         </span>
       </div>
 
@@ -56,15 +60,29 @@ export function DealCard({
 
       {prochaineEcheanceDate && statut !== "termine" && (
         <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-sm dark:bg-white/5">
-          <div>
-            <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-slate-500">Prochaine échéance</div>
-            <div className="mt-1 font-medium">{formatDateFr(prochaineEcheanceDate)}</div>
+          <div className="min-w-0 border-r border-slate-200 pr-2 dark:border-white/10">
+            <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+              <CalendarDays size={13} aria-hidden="true" />
+              <span className="truncate">Échéance</span>
+            </div>
+            <div className="mt-1 font-medium">{formatDateCourteFr(prochaineEcheanceDate)}</div>
+            {joursAvantEcheance !== undefined && (
+              <div className="mt-1 text-xs text-slate-500">
+                {joursAvantEcheance < 0
+                  ? `En retard de ${Math.abs(joursAvantEcheance)} jour${Math.abs(joursAvantEcheance) > 1 ? "s" : ""}`
+                  : `Dans ${joursAvantEcheance} jour${joursAvantEcheance > 1 ? "s" : ""}`}
+              </div>
+            )}
           </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-slate-500">Montant coupon</div>
+          <div className="text-right">
+            <div className="flex items-center justify-end gap-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+              <ArrowDownToLine size={13} aria-hidden="true" />
+              <span className="truncate">Coupon prévu</span>
+            </div>
             <div className="mt-1 font-semibold text-emerald-600 dark:text-emerald-300">
               {prochaineEcheanceMontant !== undefined ? prochaineEcheanceMontant.toLocaleString("fr-FR") + " €" : "—"}
             </div>
+            <div className="mt-1 text-xs text-slate-500">Montant contractuel</div>
           </div>
         </div>
       )}

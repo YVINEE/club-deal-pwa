@@ -10,6 +10,10 @@ export function formatDateFr(date: Date): string {
   return format(date, "dd MMMM yyyy", { locale: fr });
 }
 
+export function formatDateCourteFr(date: Date): string {
+  return format(date, "dd MMM yyyy", { locale: fr });
+}
+
 export function frequenceEnMois(frequence: Frequence): number {
   return frequence === "trimestriel" ? 3 : 6;
 }
