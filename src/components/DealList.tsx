@@ -3,6 +3,7 @@ import { useDeals } from "../hooks/useDeals";
 import { DealCard } from "./DealCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { SecuritySettings } from "./SecuritySettings";
+import { Dashboard } from "./Dashboard";
 import { Plus, Settings } from "lucide-react";
 
 interface DealListProps {
@@ -64,6 +65,7 @@ export function DealList({
           onDesactiver={onDesactiverProtection}
         />
       )}
+      <Dashboard deals={deals} />
       {deals.length === 0 ? (
         <div className="p-8 text-center text-gray-500">
           Aucun deal pour l'instant. Ajoutez-en un avec le bouton +.

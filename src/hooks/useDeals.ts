@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Deal, Prolongation, StatutDeal } from "../types";
+import { Deal, Echeance, Prolongation, StatutDeal } from "../types";
 import { ajouterDeal, modifierDeal, supprimerDeal, getDealsAvecEcheances } from "../db/repositories";
 import { calculerStatut, dateFinCourante } from "../utils/statusUtils";
 
 export interface DealAvecStatut {
   deal: Deal;
   prolongations: Prolongation[];
+  echeances: Echeance[];
   statut: StatutDeal;
   dateFin: Date;
   prochaineEcheanceDate?: Date;
@@ -28,6 +29,7 @@ export function useDeals() {
         return {
           deal,
           prolongations,
+          echeances,
           statut: calculerStatut(deal, prolongations),
           dateFin: dateFinCourante(deal, prolongations),
           prochaineEcheanceDate: prochaine?.date,
