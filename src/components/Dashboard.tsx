@@ -208,6 +208,8 @@ function Courbe({ points }: { points: PointCourbe[] }) {
   const xAujourdHui = marge + ratioAujourdHui * (largeur - marge * 2);
   const indexAujourdHui = Math.min(pointsCourbe.length - 1, Math.max(0, Math.round(ratioAujourdHui * (pointsCourbe.length - 1))));
   const pointAujourdHui = coordonnees[indexAujourdHui];
+  const largeurEtiquette = 82;
+  const xEtiquette = Math.min(largeur - marge - largeurEtiquette, Math.max(marge, xAujourdHui - largeurEtiquette / 2));
 
   return (
     <div className="mt-5">
@@ -243,21 +245,22 @@ function Courbe({ points }: { points: PointCourbe[] }) {
           </linearGradient>
         </defs>
         <polygon points={aire} fill="url(#dashboard-area)" />
-        <line x1={xAujourdHui} x2={xAujourdHui} y1={marge} y2={base} stroke="#94a3b8" strokeDasharray="3 5" strokeOpacity="0.55" />
-        <circle cx={xAujourdHui} cy={pointAujourdHui.y} r="5" fill="#0e1422" stroke="#60a5fa" strokeWidth="2" />
+        <line x1={xAujourdHui} x2={xAujourdHui} y1={marge + 18} y2={base} stroke="#10b981" strokeDasharray="5 3" strokeOpacity="0.9" strokeWidth="2" />
+        <rect x={xEtiquette} y="1" width={largeurEtiquette} height="18" rx="9" fill="#a7f3d0" />
+        <text x={xEtiquette + largeurEtiquette / 2} y="13" textAnchor="middle" fontSize="10" fontWeight="600" fill="#065f46">Aujourd’hui</text>
+        <circle cx={xAujourdHui} cy={pointAujourdHui.y} r="6" fill="#0e1422" stroke="#34d399" strokeWidth="2.5" />
         <polyline points={ligne} fill="none" stroke="#3b82f6" strokeOpacity="0.2" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
         <polyline points={ligneHistorique} fill="none" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {ligneProjection && (
           <polyline points={ligneProjection} fill="none" stroke="#a855f7" strokeWidth="2.5" strokeDasharray="7 5" strokeLinecap="round" strokeLinejoin="round" />
         )}
       </svg>
-      <div className="mt-2 grid grid-cols-3 items-end text-[11px] text-slate-500">
+      <div className="mt-2 grid grid-cols-2 items-end text-[11px] text-slate-500">
         <div>
           <div className="uppercase tracking-wide">Départ</div>
           <div className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-300">{montant(pointsCourbe[0].valeur)}</div>
           <div>{formatDateFr(pointsCourbe[0].date)}</div>
         </div>
-        <div className="pb-1 text-center text-slate-500 dark:text-slate-400">Aujourd’hui</div>
         <div className="text-right">
           <div className="uppercase tracking-wide">Fin de période</div>
           <div className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-300">{montant(pointsCourbe[pointsCourbe.length - 1].valeur)}</div>
