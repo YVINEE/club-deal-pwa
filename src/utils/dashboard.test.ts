@@ -65,6 +65,21 @@ describe("calculerSyntheseDashboard", () => {
     expect(synthese.prochaineEcheance?.id).toBe("a-pointer");
     expect(synthese.pointsCourbe.map((point) => point.projection)).toEqual([false, false, true]);
   });
+
+  it("calcule le mini résumé financier d'un deal", () => {
+    const premier = deal(10000, "2025-01-01");
+    premier.echeances = [
+      { id: "pointe", dealId: premier.deal.id, date: new Date("2025-02-01"), montant: 250, encaissee: true },
+      { id: "future", dealId: premier.deal.id, date: new Date("2026-02-01"), montant: 250, encaissee: false },
+    ];
+
+    expect(calculerSyntheseDashboard([premier], new Date("2025-06-01"), { suiviEncaissements: true })).toMatchObject({
+      totalInvesti: 10000,
+      interetsAcquis: 250,
+      interetsFuturs: 250,
+      totalFinal: 10500,
+    });
+  });
 });
 
 describe("filtrerPointsCourbe", () => {

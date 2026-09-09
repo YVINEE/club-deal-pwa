@@ -51,6 +51,14 @@ test("crée, annule, modifie et revient à la liste des deals", async ({ page })
 
   await fillDeal(page);
   await page.getByRole("heading", { name: dealName, exact: true }).click();
+  await expect(page.getByRole("region", { name: "Valeur actuelle du deal" })).toBeVisible();
+  await expect(page.getByText("Valeur actuelle", { exact: true })).toBeVisible();
+  await expect(page.getByText("Rendement : 12 % / an · Trimestriel", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Résumé financier du deal" })).toBeVisible();
+  await expect(page.getByText("Capital investi", { exact: true })).toBeVisible();
+  await expect(page.getByText("Gains acquis", { exact: true })).toBeVisible();
+  await expect(page.getByText("Gains futurs", { exact: true })).toBeVisible();
+  await expect(page.getByText("Total final prévu", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Modifier" }).click();
   await expect(page.getByRole("heading", { name: "Modifier le deal" })).toBeVisible();
   await page.locator("form input").nth(0).fill("Deal Playwright modifié");
