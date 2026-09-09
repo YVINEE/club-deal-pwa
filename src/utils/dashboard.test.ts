@@ -30,6 +30,8 @@ describe("calculerSyntheseDashboard", () => {
       interetsFuturs: 200,
       totalActuel: 10200,
       totalFinal: 10400,
+      performanceBrute: 2,
+      rendementMoyenPondere: 8,
     });
   });
 

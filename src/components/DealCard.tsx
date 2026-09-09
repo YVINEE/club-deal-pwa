@@ -1,4 +1,6 @@
 import { Deal, StatutDeal } from "../types";
+import { differenceInCalendarMonths } from "date-fns";
+import { Clock3 } from "lucide-react";
 import { formatDateFr } from "../utils/dateUtils";
 
 interface DealCardProps {
@@ -26,15 +28,24 @@ export function DealCard({
 }: DealCardProps) {
   const badge = BADGE_CONFIG[statut];
   const progression = calculerProgression(deal.dateDebut, dateFin);
+  const dureeMois = Math.max(1, differenceInCalendarMonths(dateFin, deal.dateDebut));
+  const moisEcoules = Math.min(dureeMois, Math.max(0, differenceInCalendarMonths(new Date(), deal.dateDebut)));
+  const progressionArrondie = Math.round(progression);
+  const badgeClasses =
+    statut === "enProlongation"
+      ? "bg-amber-400/10 text-amber-300"
+      : statut === "actif"
+        ? "bg-emerald-400/10 text-emerald-300"
+        : "bg-red-400/10 text-red-300";
 
   return (
     <div
       onClick={onClick}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 cursor-pointer active:opacity-80 transition-opacity"
+      className="cursor-pointer rounded-2xl border border-transparent bg-white p-4 shadow-sm transition-opacity active:opacity-80 dark:border-white/5 dark:bg-[#111827]"
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold text-lg">{deal.nom}</h3>
-        <span className={`text-sm font-medium ${badge.couleur}`}>
+        <span className={"rounded-full px-2 py-1 text-xs font-medium " + badgeClasses}>
           {badge.emoji} {badge.label}
         </span>
       </div>
@@ -44,19 +55,42 @@ export function DealCard({
       </div>
 
       {prochaineEcheanceDate && statut !== "termine" && (
-        <div className="text-sm mb-3">
-          Prochaine échéance : {formatDateFr(prochaineEcheanceDate)}
-          {prochaineEcheanceMontant !== undefined && (
-            <span className="font-medium">
-              {" "}
-              — {prochaineEcheanceMontant.toLocaleString("fr-FR")} €
-            </span>
-          )}
+        <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-sm dark:bg-white/5">
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-slate-500">Prochaine échéance</div>
+            <div className="mt-1 font-medium">{formatDateFr(prochaineEcheanceDate)}</div>
+          </div>
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-slate-500">Montant coupon</div>
+            <div className="mt-1 font-semibold text-emerald-600 dark:text-emerald-300">
+              {prochaineEcheanceMontant !== undefined ? prochaineEcheanceMontant.toLocaleString("fr-FR") + " €" : "—"}
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-        <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: `${progression}%` }} />
+      {statut === "enProlongation" && (
+        <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+          <Clock3 size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <span>Maturité étendue · remboursement cible {formatDateFr(dateFin)}</span>
+        </div>
+      )}
+
+      <div className="mb-1 flex justify-between text-xs text-gray-500">
+        <span>Avancement contractuel</span>
+        <span>{moisEcoules}/{dureeMois} mois ({progressionArrondie}%)</span>
+      </div>
+      <div
+        className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700"
+        aria-label={"Avancement contractuel : " + progressionArrondie + "%"}
+      >
+        <div
+          className={
+            "h-1.5 rounded-full transition-all " +
+            (statut === "enProlongation" ? "bg-amber-400" : "bg-blue-600")
+          }
+          style={{ width: progression + "%" }}
+        />
       </div>
     </div>
   );

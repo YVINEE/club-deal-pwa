@@ -18,7 +18,10 @@ export interface SyntheseDashboard {
   interetsFuturs: number;
   totalActuel: number;
   totalFinal: number;
+  performanceBrute: number;
+  rendementMoyenPondere: number;
   prochaineEcheance?: Echeance;
+  prochaineEcheanceDealNom?: string;
   pointsCourbe: PointCourbe[];
 }
 
@@ -38,6 +41,10 @@ export function calculerSyntheseDashboard(
     .filter((echeance) => echeance.date > maintenant)
     .reduce((total, echeance) => total + echeance.montant, 0);
   const totalInvesti = deals.reduce((total, { deal }) => total + deal.montant, 0);
+  const rendementMoyenPondere =
+    totalInvesti === 0
+      ? 0
+      : deals.reduce((total, { deal }) => total + deal.montant * deal.rendementAnnuel, 0) / totalInvesti;
   const prochaineEcheance = echeances
     .filter((echeance) => echeance.date > maintenant)
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
@@ -48,7 +55,12 @@ export function calculerSyntheseDashboard(
     interetsFuturs: arrondirMontant(interetsFuturs),
     totalActuel: arrondirMontant(totalInvesti + interetsAcquis),
     totalFinal: arrondirMontant(totalInvesti + interetsAcquis + interetsFuturs),
+    performanceBrute: totalInvesti === 0 ? 0 : arrondirMontant((interetsAcquis / totalInvesti) * 100),
+    rendementMoyenPondere: arrondirMontant(rendementMoyenPondere),
     prochaineEcheance,
+    prochaineEcheanceDealNom: deals.find(({ echeances: dealEcheances }) =>
+      dealEcheances.some((echeance) => echeance.id === prochaineEcheance?.id)
+    )?.deal.nom,
     pointsCourbe: creerPointsCourbe(deals, maintenant),
   };
 }
@@ -67,4 +79,3 @@ export function creerPointsCourbe(deals: DashboardDeal[], maintenant: Date = new
     return { date, valeur, projection: date > maintenant };
   });
 }
-
