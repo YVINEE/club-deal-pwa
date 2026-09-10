@@ -85,6 +85,7 @@ function normaliserMontantsEcheances(data: PortfolioData): PortfolioData {
       deal.frequence,
       deal.dateDebut,
       echeance.date,
+      deal.appliquerEvolutionFiscale === true,
     );
     if (Math.abs(montant - echeance.montant) < 0.000001) return echeance;
     modifie = true;

@@ -50,7 +50,12 @@ export function calculerSyntheseDashboard(
     totalInvesti === 0
       ? 0
       : deals.reduce(
-          (total, { deal }) => total + deal.montant * calculerTauxNetEffectif(deal.rendementAnnuel, deal.dateDebut, maintenant),
+          (total, { deal }) => total + deal.montant * calculerTauxNetEffectif(
+            deal.rendementAnnuel,
+            deal.dateDebut,
+            maintenant,
+            deal.appliquerEvolutionFiscale === true,
+          ),
           0,
         ) / totalInvesti;
   const prochaineEcheance = echeances

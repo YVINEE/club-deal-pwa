@@ -58,7 +58,7 @@ export function DealCard({
       <div className="text-sm text-gray-500 mb-3">
         {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% net / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
-      {dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
+      {deal.appliquerEvolutionFiscale === true && dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
         <div className="mb-3 text-xs text-slate-500 dark:text-slate-400">
           Coupons ajustés depuis le 1er janvier 2026
         </div>

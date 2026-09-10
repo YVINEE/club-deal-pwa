@@ -10,6 +10,11 @@ export function dealCommenceAvantEvolutionFiscale(dateDebut: Date): boolean {
   return dateDebut < new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
 }
 
+export function dealEligibleEvolutionFiscale(dateDebut: Date, dureeInitiale: number): boolean {
+  return dealCommenceAvantEvolutionFiscale(dateDebut)
+    && addMonths(dateDebut, dureeInitiale) > new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
+}
+
 export function calculMontantInteret(deal: Deal): number {
   return calculerCouponEstime(deal.montant, deal.rendementAnnuel, deal.frequence);
 }
@@ -23,9 +28,10 @@ export function calculerTauxNetEffectif(
   rendementNet: number,
   dateDebut: Date,
   dateEcheance: Date,
+  appliquerEvolutionFiscale = false,
 ): number {
   const changement = new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
-  if (!dealCommenceAvantEvolutionFiscale(dateDebut) || dateEcheance < changement) return rendementNet;
+  if (!appliquerEvolutionFiscale || !dealCommenceAvantEvolutionFiscale(dateDebut) || dateEcheance < changement) return rendementNet;
   return rendementNet
     * (1 - TAUX_PRELEVEMENT_DEPUIS_2026 / 100)
     / (1 - TAUX_PRELEVEMENT_AVANT_2026 / 100);
@@ -37,8 +43,9 @@ export function calculerCouponPourDate(
   frequence: Deal["frequence"],
   dateDebut: Date,
   dateEcheance: Date,
+  appliquerEvolutionFiscale = false,
 ): number {
-  const tauxNetEffectif = calculerTauxNetEffectif(rendementNet, dateDebut, dateEcheance);
+  const tauxNetEffectif = calculerTauxNetEffectif(rendementNet, dateDebut, dateEcheance, appliquerEvolutionFiscale);
   return montant * (tauxNetEffectif / 100) * (frequenceEnMois(frequence) / 12);
 }
 
@@ -86,7 +93,14 @@ function genererEcheancesPourPeriode(
       id: crypto.randomUUID(),
       dealId,
       date: dateCourante,
-      montant: calculerCouponPourDate(deal.montant, deal.rendementAnnuel, deal.frequence, deal.dateDebut, dateCourante),
+      montant: calculerCouponPourDate(
+        deal.montant,
+        deal.rendementAnnuel,
+        deal.frequence,
+        deal.dateDebut,
+        dateCourante,
+        deal.appliquerEvolutionFiscale === true,
+      ),
       encaissee: false,
     });
     dateCourante = addMonths(dateCourante, freqMois);

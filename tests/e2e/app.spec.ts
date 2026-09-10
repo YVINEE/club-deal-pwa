@@ -239,6 +239,29 @@ test("trie les deals par échéance, montant et date de fin", async ({ page }) =
   await expect(page.getByLabel("Trier les deals")).toHaveValue("dateFin");
 });
 
+test("active l’évolution de la CSG 2026 pour un deal éligible", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await page.getByRole("button", { name: "Ajouter un deal" }).click();
+
+  const fields = page.locator("form input");
+  await fields.nth(0).fill("Deal CSG 2026");
+  await fields.nth(1).fill("2025-01-15");
+  await fields.nth(2).fill("10000");
+  await fields.nth(3).fill("10");
+  await fields.nth(4).fill("24");
+  await fields.nth(5).fill("0");
+
+  const evolution = page.getByRole("switch", { name: "Appliquer l’évolution de la CSG de 2026" });
+  await expect(evolution).toBeVisible();
+  await expect(evolution).toHaveAttribute("aria-checked", "false");
+  await evolution.click();
+  await expect(evolution).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Créer", exact: true }).click();
+  await page.getByRole("heading", { name: "Deal CSG 2026", exact: true }).click();
+  await expect(page.getByText("Coupons ajustés depuis le 1er janvier 2026", { exact: true })).toBeVisible();
+});
+
 test("filtre les deals et les échéances", async ({ page }) => {
   await openApp(page);
   await openDeals(page);

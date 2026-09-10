@@ -12,6 +12,7 @@ export interface Deal {
   dureeInitiale: number; // en mois
   nombreMaxProlongations: number;
   dureeProlongationMois: number;
+  appliquerEvolutionFiscale?: boolean;
 }
 
 export interface Prolongation {

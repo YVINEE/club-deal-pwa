@@ -6,6 +6,7 @@ import {
   calculerTauxNetEffectif,
   calculMontantInteret,
   creerProlongation,
+  dealEligibleEvolutionFiscale,
   genererEcheances,
 } from "./calculs";
 
@@ -50,19 +51,25 @@ describe("calculerCouponEstime", () => {
 });
 
 describe("fiscalité des coupons", () => {
+  it("rend l’option disponible uniquement pour un ancien deal qui dépasse 2026", () => {
+    expect(dealEligibleEvolutionFiscale(date(2025, 1, 1), 24)).toBe(true);
+    expect(dealEligibleEvolutionFiscale(date(2025, 1, 1), 9)).toBe(false);
+    expect(dealEligibleEvolutionFiscale(date(2026, 1, 1), 24)).toBe(false);
+  });
+
   it("conserve le taux net avant le 1er janvier 2026", () => {
     expect(calculerTauxNetEffectif(10, date(2025, 1, 1), date(2025, 10, 1))).toBe(10);
     expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2025, 10, 1))).toBe(250);
   });
 
   it("ajuste le taux net à partir du 1er janvier 2026", () => {
-    expect(calculerTauxNetEffectif(10, date(2025, 1, 1), date(2026, 1, 1))).toBeCloseTo(9.8);
-    expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2026, 1, 1))).toBeCloseTo(245);
+    expect(calculerTauxNetEffectif(10, date(2025, 1, 1), date(2026, 1, 1), true)).toBeCloseTo(9.8);
+    expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2026, 1, 1), true)).toBeCloseTo(245);
   });
 
   it("ne modifie pas un deal commencé à partir de 2026", () => {
-    expect(calculerTauxNetEffectif(10, date(2026, 1, 1), date(2026, 4, 1))).toBe(10);
-    expect(calculerCouponPourDate(10000, 10, "semestriel", date(2026, 1, 1), date(2026, 7, 1))).toBe(500);
+    expect(calculerTauxNetEffectif(10, date(2026, 1, 1), date(2026, 4, 1), true)).toBe(10);
+    expect(calculerCouponPourDate(10000, 10, "semestriel", date(2026, 1, 1), date(2026, 7, 1), true)).toBe(500);
   });
 });
 

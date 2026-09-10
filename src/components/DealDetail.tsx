@@ -211,7 +211,7 @@ function ValeurActuelle({
       <div className="mt-1 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
         Rendement net : {formatPourcentage(deal.rendementAnnuel)} / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
-      {dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
+      {deal.appliquerEvolutionFiscale === true && dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Coupons ajustés depuis le 1er janvier 2026
         </div>

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculerCouponPourDate } from "../utils/calculs";
+import { calculerCouponPourDate, dealEligibleEvolutionFiscale } from "../utils/calculs";
 import { addMonths, frequenceEnMois } from "../utils/dateUtils";
 
 interface DealFormProps {
@@ -22,6 +22,7 @@ interface FormState {
   dureeInitiale: string;
   nombreMaxProlongations: string;
   dureeProlongationMois: string;
+  appliquerEvolutionFiscale: boolean;
 }
 
 function dealVersFormState(deal?: Deal): FormState {
@@ -34,6 +35,7 @@ function dealVersFormState(deal?: Deal): FormState {
     dureeInitiale: deal ? String(deal.dureeInitiale) : "",
     nombreMaxProlongations: deal ? String(deal.nombreMaxProlongations) : "0",
     dureeProlongationMois: deal ? String(deal.dureeProlongationMois) : "",
+    appliquerEvolutionFiscale: deal?.appliquerEvolutionFiscale === true,
   };
 }
 
@@ -42,6 +44,9 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const dateDebut = form.dateDebut ? new Date(form.dateDebut) : null;
+  const evolutionFiscaleEligible = dateDebut && Number(form.dureeInitiale) > 0
+    ? dealEligibleEvolutionFiscale(dateDebut, Number(form.dureeInitiale))
+    : false;
   const datePremiereEcheance = dateDebut ? addMonths(dateDebut, frequenceEnMois(form.frequence)) : null;
   const couponEstime = dateDebut && datePremiereEcheance && Number(form.montant) > 0 && Number(form.rendementAnnuel) > 0
     ? calculerCouponPourDate(
@@ -50,12 +55,19 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         form.frequence,
         dateDebut,
         datePremiereEcheance,
+        evolutionFiscaleEligible && form.appliquerEvolutionFiscale,
       )
     : null;
 
   useEffect(() => {
     setForm(dealVersFormState(dealExistant));
   }, [dealExistant]);
+
+  useEffect(() => {
+    if (!evolutionFiscaleEligible && form.appliquerEvolutionFiscale) {
+      setForm((f) => ({ ...f, appliquerEvolutionFiscale: false }));
+    }
+  }, [evolutionFiscaleEligible, form.appliquerEvolutionFiscale]);
 
   function majChamp<K extends keyof FormState>(champ: K, valeur: FormState[K]) {
     setForm((f) => ({ ...f, [champ]: valeur }));
@@ -97,6 +109,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         dureeInitiale: Number(form.dureeInitiale),
         nombreMaxProlongations: Number(form.nombreMaxProlongations),
         dureeProlongationMois: form.dureeProlongationMois ? Number(form.dureeProlongationMois) : 0,
+        appliquerEvolutionFiscale: evolutionFiscaleEligible && form.appliquerEvolutionFiscale,
       };
       await onSubmit(deal);
     } finally {
@@ -200,6 +213,26 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
             className="h-12 text-base"
           />
         </Champ>
+      )}
+
+      {evolutionFiscaleEligible && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
+          <label htmlFor="evolution-fiscale" className="flex cursor-pointer items-center justify-between gap-3">
+            <span className="text-sm font-medium">Appliquer l’évolution de la CSG de 2026</span>
+            <input
+              id="evolution-fiscale"
+              type="checkbox"
+              role="switch"
+              aria-checked={form.appliquerEvolutionFiscale}
+              checked={form.appliquerEvolutionFiscale}
+              onChange={(event) => majChamp("appliquerEvolutionFiscale", event.target.checked)}
+              className="h-5 w-9 accent-emerald-600"
+            />
+          </label>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            Les coupons à partir du 1er janvier 2026 seront ajustés selon le nouveau taux.
+          </p>
+        </div>
       )}
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex gap-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
