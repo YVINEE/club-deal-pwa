@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { Deal, Prolongation } from "../types";
-import { calculerCouponEstime, calculMontantInteret, creerProlongation, genererEcheances } from "./calculs";
+import {
+  calculerCouponEstime,
+  calculerCouponPourDate,
+  calculerTauxNetEffectif,
+  calculMontantInteret,
+  creerProlongation,
+  genererEcheances,
+} from "./calculs";
 
 function date(annee: number, mois: number, jour: number): Date {
   return new Date(annee, mois - 1, jour, 12);
@@ -39,6 +46,23 @@ describe("calculerCouponEstime", () => {
   it("calcule le coupon à partir des valeurs du formulaire", () => {
     expect(calculerCouponEstime(10000, 10, "trimestriel")).toBe(250);
     expect(calculerCouponEstime(10000, 10, "semestriel")).toBe(500);
+  });
+});
+
+describe("fiscalité des coupons", () => {
+  it("conserve le taux net avant le 1er janvier 2026", () => {
+    expect(calculerTauxNetEffectif(10, date(2025, 1, 1), date(2025, 10, 1))).toBe(10);
+    expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2025, 10, 1))).toBe(250);
+  });
+
+  it("ajuste le taux net à partir du 1er janvier 2026", () => {
+    expect(calculerTauxNetEffectif(10, date(2025, 1, 1), date(2026, 1, 1))).toBeCloseTo(9.8);
+    expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2026, 1, 1))).toBeCloseTo(245);
+  });
+
+  it("ne modifie pas un deal commencé à partir de 2026", () => {
+    expect(calculerTauxNetEffectif(10, date(2026, 1, 1), date(2026, 4, 1))).toBe(10);
+    expect(calculerCouponPourDate(10000, 10, "semestriel", date(2026, 1, 1), date(2026, 7, 1))).toBe(500);
   });
 });
 

@@ -11,10 +11,13 @@ async function recalculerEcheances(dealId: string): Promise<void> {
   const anciennesEcheances = data.echeances.filter((echeance) => echeance.dealId === dealId);
   const echeances = genererEcheances(deal, prolongations);
   const encaissements = new Map(
-    anciennesEcheances.map((echeance) => [echeance.date.getTime() + "-" + echeance.montant, echeance.encaissee])
+    anciennesEcheances.map((echeance) => [echeance.date.getTime(), echeance])
   );
   echeances.forEach((echeance) => {
-    echeance.encaissee = encaissements.get(echeance.date.getTime() + "-" + echeance.montant) ?? false;
+    const ancienne = encaissements.get(echeance.date.getTime());
+    if (!ancienne) return;
+    echeance.encaissee = ancienne.encaissee;
+    if (ancienne.encaissee) echeance.montant = ancienne.montant;
   });
 
   data.echeances = [...data.echeances.filter((echeance) => echeance.dealId !== dealId), ...echeances];

@@ -2,6 +2,14 @@ import { Deal, Prolongation, Echeance } from "../types";
 import { addMonths, frequenceEnMois } from "./dateUtils";
 import { dateFinCourante, peutProlonger } from "./statusUtils";
 
+export const DATE_CHANGEMENT_FISCALITE = "2026-01-01";
+export const TAUX_PRELEVEMENT_AVANT_2026 = 30;
+export const TAUX_PRELEVEMENT_DEPUIS_2026 = 31.4;
+
+export function dealCommenceAvantEvolutionFiscale(dateDebut: Date): boolean {
+  return dateDebut < new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
+}
+
 export function calculMontantInteret(deal: Deal): number {
   return calculerCouponEstime(deal.montant, deal.rendementAnnuel, deal.frequence);
 }
@@ -11,9 +19,31 @@ export function calculerCouponEstime(montant: number, rendementAnnuel: number, f
   return montant * (rendementAnnuel / 100) * (freqMois / 12);
 }
 
+export function calculerTauxNetEffectif(
+  rendementNet: number,
+  dateDebut: Date,
+  dateEcheance: Date,
+): number {
+  const changement = new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
+  if (!dealCommenceAvantEvolutionFiscale(dateDebut) || dateEcheance < changement) return rendementNet;
+  return rendementNet
+    * (1 - TAUX_PRELEVEMENT_DEPUIS_2026 / 100)
+    / (1 - TAUX_PRELEVEMENT_AVANT_2026 / 100);
+}
+
+export function calculerCouponPourDate(
+  montant: number,
+  rendementNet: number,
+  frequence: Deal["frequence"],
+  dateDebut: Date,
+  dateEcheance: Date,
+): number {
+  const tauxNetEffectif = calculerTauxNetEffectif(rendementNet, dateDebut, dateEcheance);
+  return montant * (tauxNetEffectif / 100) * (frequenceEnMois(frequence) / 12);
+}
+
 export function genererEcheances(deal: Deal, prolongations: Prolongation[]): Echeance[] {
   const echeances: Echeance[] = [];
-  const montantInteret = calculMontantInteret(deal);
   const freqMois = frequenceEnMois(deal.frequence);
 
   genererEcheancesPourPeriode(
@@ -21,7 +51,7 @@ export function genererEcheances(deal: Deal, prolongations: Prolongation[]): Ech
     deal.dateDebut,
     deal.dureeInitiale,
     freqMois,
-    montantInteret,
+    deal,
     echeances
   );
 
@@ -32,7 +62,7 @@ export function genererEcheances(deal: Deal, prolongations: Prolongation[]): Ech
       prolongation.dateDebut,
       deal.dureeProlongationMois,
       freqMois,
-      montantInteret,
+      deal,
       echeances
     );
   }
@@ -45,7 +75,7 @@ function genererEcheancesPourPeriode(
   dateDebut: Date,
   dureeMois: number,
   freqMois: number,
-  montantInteret: number,
+  deal: Deal,
   echeances: Echeance[]
 ): void {
   let dateCourante = addMonths(dateDebut, freqMois);
@@ -56,7 +86,7 @@ function genererEcheancesPourPeriode(
       id: crypto.randomUUID(),
       dealId,
       date: dateCourante,
-      montant: montantInteret,
+      montant: calculerCouponPourDate(deal.montant, deal.rendementAnnuel, deal.frequence, deal.dateDebut, dateCourante),
       encaissee: false,
     });
     dateCourante = addMonths(dateCourante, freqMois);

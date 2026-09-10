@@ -8,6 +8,7 @@ import {
   dechiffrerTexte,
   motDePasseValide,
 } from "../utils/crypto";
+import { calculerCouponPourDate } from "../utils/calculs";
 
 const MODE_KEY = "club-deal-storage-mode";
 const VAULT_ID = "current";
@@ -70,6 +71,26 @@ async function ecrireTablesClaires(data: PortfolioData): Promise<void> {
     await db.prolongations.bulkAdd(data.prolongations);
     await db.echeances.bulkAdd(data.echeances);
   });
+}
+
+function normaliserMontantsEcheances(data: PortfolioData): PortfolioData {
+  const deals = new Map(data.deals.map((deal) => [deal.id, deal]));
+  let modifie = false;
+  const echeances = data.echeances.map((echeance) => {
+    const deal = deals.get(echeance.dealId);
+    if (!deal || echeance.encaissee) return echeance;
+    const montant = calculerCouponPourDate(
+      deal.montant,
+      deal.rendementAnnuel,
+      deal.frequence,
+      deal.dateDebut,
+      echeance.date,
+    );
+    if (Math.abs(montant - echeance.montant) < 0.000001) return echeance;
+    modifie = true;
+    return { ...echeance, montant };
+  });
+  return modifie ? { ...data, echeances } : data;
 }
 
 async function effacerTablesClaires(): Promise<void> {
@@ -138,7 +159,10 @@ function validerDonnees(data: PortfolioData): void {
 
 export async function ouvrirStockage(mode: StorageMode): Promise<void> {
   if (mode === "plain") {
-    session = { mode, data: await lireTablesClaires() };
+    const donneesExistantes = await lireTablesClaires();
+    const data = normaliserMontantsEcheances(donneesExistantes);
+    if (data !== donneesExistantes) await ecrireTablesClaires(data);
+    session = { mode, data };
   }
 }
 
@@ -151,7 +175,10 @@ export async function deverrouillerStockage(motDePasse: string): Promise<void> {
   const vault = await db.vault.get(VAULT_ID);
   if (!vault) throw new Error("Coffre chiffré introuvable");
   const { texte, cle } = await dechiffrerTexte(vault, motDePasse);
-  session = { mode: "encrypted", data: deserialiser(texte), cle, chiffrement: vault };
+  const donneesExistantes = deserialiser(texte);
+  const data = normaliserMontantsEcheances(donneesExistantes);
+  session = { mode: "encrypted", data, cle, chiffrement: vault };
+  if (data !== donneesExistantes) await enregistrerPortefeuille(data);
 }
 
 export async function lirePortefeuille(): Promise<PortfolioData> {

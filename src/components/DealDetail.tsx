@@ -9,6 +9,7 @@ import { ExportTab } from "./ExportTab";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { annulerEcheanceEncaissee, marquerEcheanceEncaissee } from "../db/repositories";
 import { calculerSyntheseDashboard } from "../utils/dashboard";
+import { dealCommenceAvantEvolutionFiscale } from "../utils/calculs";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -208,8 +209,13 @@ function ValeurActuelle({
         {synthese.performanceBrute > 0 ? "+" : ""}{formatPourcentage(synthese.performanceBrute)}
       </div>
       <div className="mt-1 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
-        Rendement : {formatPourcentage(deal.rendementAnnuel)} / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
+        Rendement net : {formatPourcentage(deal.rendementAnnuel)} / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
+      {dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
+        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Coupons ajustés depuis le 1er janvier 2026
+        </div>
+      )}
     </section>
   );
 }

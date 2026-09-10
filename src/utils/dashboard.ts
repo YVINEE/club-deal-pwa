@@ -1,4 +1,5 @@
 import { Deal, Echeance, StatutDeal } from "../types";
+import { calculerTauxNetEffectif } from "./calculs";
 
 export interface DashboardDeal {
   deal: Deal;
@@ -48,7 +49,10 @@ export function calculerSyntheseDashboard(
   const rendementMoyenPondere =
     totalInvesti === 0
       ? 0
-      : deals.reduce((total, { deal }) => total + deal.montant * deal.rendementAnnuel, 0) / totalInvesti;
+      : deals.reduce(
+          (total, { deal }) => total + deal.montant * calculerTauxNetEffectif(deal.rendementAnnuel, deal.dateDebut, maintenant),
+          0,
+        ) / totalInvesti;
   const prochaineEcheance = echeances
     .filter((echeance) => (suiviEncaissements ? !echeance.encaissee : echeance.date > maintenant))
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];

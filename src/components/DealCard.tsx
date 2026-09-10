@@ -2,6 +2,7 @@ import { Deal, StatutDeal } from "../types";
 import { differenceInCalendarDays, differenceInCalendarMonths } from "date-fns";
 import { ArrowDownToLine, CalendarClock, CalendarDays, Clock3 } from "lucide-react";
 import { formatDateCourteFr, formatDateFr } from "../utils/dateUtils";
+import { dealCommenceAvantEvolutionFiscale } from "../utils/calculs";
 
 interface DealCardProps {
   deal: Deal;
@@ -55,8 +56,13 @@ export function DealCard({
       </div>
 
       <div className="text-sm text-gray-500 mb-3">
-        {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
+        {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% net / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
+      {dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
+        <div className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+          Coupons ajustés depuis le 1er janvier 2026
+        </div>
+      )}
 
       <div
         className={

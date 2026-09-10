@@ -35,6 +35,12 @@ describe("calculerSyntheseDashboard", () => {
     });
   });
 
+  it("calcule le rendement moyen avec la fiscalité actuelle", () => {
+    const ancienDeal = deal(10000, "2025-01-01");
+
+    expect(calculerSyntheseDashboard([ancienDeal], new Date("2026-02-01")).rendementMoyenPondere).toBeCloseTo(7.84);
+  });
+
   it("génère une courbe cumulée et identifie la prochaine échéance", () => {
     const premier = deal(1000, "2025-01-01");
     premier.echeances = [

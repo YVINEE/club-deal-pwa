@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculerCouponEstime } from "../utils/calculs";
+import { calculerCouponPourDate } from "../utils/calculs";
+import { addMonths, frequenceEnMois } from "../utils/dateUtils";
 
 interface DealFormProps {
   dealExistant?: Deal;
@@ -40,8 +41,16 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
   const [form, setForm] = useState<FormState>(dealVersFormState(dealExistant));
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
-  const couponEstime = Number(form.montant) > 0 && Number(form.rendementAnnuel) > 0
-    ? calculerCouponEstime(Number(form.montant), Number(form.rendementAnnuel), form.frequence)
+  const dateDebut = form.dateDebut ? new Date(form.dateDebut) : null;
+  const datePremiereEcheance = dateDebut ? addMonths(dateDebut, frequenceEnMois(form.frequence)) : null;
+  const couponEstime = dateDebut && datePremiereEcheance && Number(form.montant) > 0 && Number(form.rendementAnnuel) > 0
+    ? calculerCouponPourDate(
+        Number(form.montant),
+        Number(form.rendementAnnuel),
+        form.frequence,
+        dateDebut,
+        datePremiereEcheance,
+      )
     : null;
 
   useEffect(() => {
