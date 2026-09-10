@@ -23,13 +23,13 @@ async function openDeadlines(page: Page) {
   await expect(page.getByRole("heading", { name: "Échéances", exact: true })).toBeVisible();
 }
 
-async function fillDeal(page: Page, name = dealName) {
+async function fillDeal(page: Page, name = dealName, startDate = oldStartDate) {
   await page.getByRole("button", { name: "Ajouter un deal" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau deal" })).toBeVisible();
 
   const fields = page.locator("form input");
   await fields.nth(0).fill(name);
-  await fields.nth(1).fill(oldStartDate);
+  await fields.nth(1).fill(startDate);
   await fields.nth(2).fill("10000");
   await fields.nth(3).fill("12");
   await fields.nth(4).fill("12");
@@ -349,6 +349,24 @@ test("filtre les deals et les échéances", async ({ page }) => {
   const deadlineFilters = page.getByRole("tablist", { name: "Filtrer les échéances" });
   await deadlineFilters.getByRole("tab", { name: /^À pointer/ }).click();
   await expect(page.getByText(dealName, { exact: true }).first()).toBeVisible();
+  await deadlineFilters.getByRole("tab", { name: /^Encaissées/ }).click();
+  await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
+});
+
+test("filtre les échéances à venir", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page, "Deal futur", "2027-01-15");
+  await openDeadlines(page);
+
+  const deadlineFilters = page.getByRole("tablist", { name: "Filtrer les échéances" });
+  await expect(deadlineFilters.getByRole("tab", { name: /^À venir/ })).toBeVisible();
+  await deadlineFilters.getByRole("tab", { name: /^À venir/ }).click();
+  await expect(page.getByText("Deal futur", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Aucune échéance dans ce filtre.")).toHaveCount(0);
+
+  await deadlineFilters.getByRole("tab", { name: /^À pointer/ }).click();
+  await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
   await deadlineFilters.getByRole("tab", { name: /^Encaissées/ }).click();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
 });

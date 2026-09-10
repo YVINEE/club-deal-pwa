@@ -9,7 +9,7 @@ interface EcheancesPageProps {
   suiviEncaissementsActif: boolean;
 }
 
-type FiltreEcheances = "toutes" | "aPointer" | "encaissees";
+type FiltreEcheances = "toutes" | "aPointer" | "aVenir" | "encaissees";
 
 function formatMontant(montant: number): string {
   return `${montant.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -26,6 +26,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   const estEchue = (date: Date) => date.getTime() <= maintenant.getTime();
 
   const nbAPointer = echeances.filter((echeance) => !echeance.encaissee && estEchue(echeance.date)).length;
+  const nbAVenir = echeances.filter((echeance) => !echeance.encaissee && !estEchue(echeance.date)).length;
   const nbEncaissees = echeances.filter((echeance) => echeance.encaissee).length;
   const totalEcheances = echeances.reduce((total, echeance) => total + echeance.montant, 0);
   const totalEncaisse = echeances
@@ -49,6 +50,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
 
     return echeancesTriees.filter((echeance) => {
       if (filtre === "aPointer") return !echeance.encaissee && estEchue(echeance.date);
+      if (filtre === "aVenir") return !echeance.encaissee && !estEchue(echeance.date);
       if (filtre === "encaissees") return echeance.encaissee;
       return true;
     });
@@ -115,6 +117,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
           {([
             ["toutes", `Toutes (${echeances.length})`],
             ["aPointer", `À pointer (${nbAPointer})`],
+            ["aVenir", `À venir (${nbAVenir})`],
             ["encaissees", `Encaissées (${nbEncaissees})`],
           ] as const).map(([valeur, libelle]) => (
             <button
