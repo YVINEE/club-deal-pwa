@@ -86,6 +86,7 @@ function normaliserMontantsEcheances(data: PortfolioData): PortfolioData {
       deal.dateDebut,
       echeance.date,
       deal.appliquerEvolutionFiscale === true,
+      deal.montantCouponApresEvolutionFiscale,
     );
     if (Math.abs(montant - echeance.montant) < 0.000001) return echeance;
     modifie = true;
@@ -141,7 +142,13 @@ function deserialiser(texte: string): PortfolioData {
 function validerDonnees(data: PortfolioData): void {
   const dealIds = new Set(data.deals.map((deal) => deal.id));
   if (
-    data.deals.some((deal) => typeof deal.id !== "string" || typeof deal.nom !== "string" || !Number.isFinite(deal.montant)) ||
+    data.deals.some((deal) =>
+      typeof deal.id !== "string" ||
+      typeof deal.nom !== "string" ||
+      !Number.isFinite(deal.montant) ||
+      (deal.montantCouponApresEvolutionFiscale !== undefined &&
+        (!Number.isFinite(deal.montantCouponApresEvolutionFiscale) || deal.montantCouponApresEvolutionFiscale < 0))
+    ) ||
     data.prolongations.some((prolongation) => !dealIds.has(prolongation.dealId)) ||
     data.echeances.some((echeance) => !dealIds.has(echeance.dealId) || typeof echeance.encaissee !== "boolean")
   ) {

@@ -67,6 +67,7 @@ describe("fiscalité des coupons", () => {
     expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2026, 1, 1), true)).toBeCloseTo(245);
     expect(calculerTauxNetEffectif(12, date(2025, 1, 1), date(2026, 1, 1), true)).toBe(11.8);
     expect(calculerCouponPourDate(10000, 12, "trimestriel", date(2025, 1, 1), date(2026, 1, 1), true)).toBe(295);
+    expect(calculerCouponPourDate(10000, 12, "trimestriel", date(2025, 1, 1), date(2026, 1, 1), true, 296)).toBe(296);
   });
 
   it("ne modifie pas un deal commencé à partir de 2026", () => {
@@ -115,6 +116,18 @@ describe("genererEcheances", () => {
       "2025-10-15",
       "2026-01-15",
     ]);
+  });
+
+  it("utilise le montant de coupon personnalisé après 2026", () => {
+    const echeances = genererEcheances(creerDeal({
+      dateDebut: date(2025, 1, 15),
+      dureeInitiale: 24,
+      appliquerEvolutionFiscale: true,
+      montantCouponApresEvolutionFiscale: 296,
+    }), []);
+
+    expect(echeances.find((echeance) => cleDate(echeance.date) === "2025-10-15")?.montant).toBe(300);
+    expect(echeances.find((echeance) => cleDate(echeance.date) === "2026-01-15")?.montant).toBe(296);
   });
 });
 

@@ -1,10 +1,10 @@
-import { useState, useEffect, FormEvent, ReactNode } from "react";
+import { useState, useEffect, useRef, FormEvent, ReactNode } from "react";
 import { Deal, Frequence } from "../types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculerCouponPourDate, dealEligibleEvolutionFiscale } from "../utils/calculs";
+import { calculerCouponPourDate, DATE_CHANGEMENT_FISCALITE, dealEligibleEvolutionFiscale } from "../utils/calculs";
 import { addMonths, frequenceEnMois } from "../utils/dateUtils";
 
 interface DealFormProps {
@@ -23,6 +23,7 @@ interface FormState {
   nombreMaxProlongations: string;
   dureeProlongationMois: string;
   appliquerEvolutionFiscale: boolean;
+  montantCouponApresEvolutionFiscale: string;
 }
 
 function dealVersFormState(deal?: Deal): FormState {
@@ -36,6 +37,9 @@ function dealVersFormState(deal?: Deal): FormState {
     nombreMaxProlongations: deal ? String(deal.nombreMaxProlongations) : "0",
     dureeProlongationMois: deal ? String(deal.dureeProlongationMois) : "",
     appliquerEvolutionFiscale: deal?.appliquerEvolutionFiscale === true,
+    montantCouponApresEvolutionFiscale: deal?.montantCouponApresEvolutionFiscale !== undefined
+      ? String(deal.montantCouponApresEvolutionFiscale)
+      : "",
   };
 }
 
@@ -43,6 +47,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
   const [form, setForm] = useState<FormState>(dealVersFormState(dealExistant));
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const initialisationRef = useRef(true);
   const dateDebut = form.dateDebut ? new Date(form.dateDebut) : null;
   const evolutionFiscaleEligible = dateDebut && Number(form.dureeInitiale) > 0
     ? dealEligibleEvolutionFiscale(dateDebut, Number(form.dureeInitiale))
@@ -58,8 +63,19 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         evolutionFiscaleEligible && form.appliquerEvolutionFiscale,
       )
     : null;
+  const couponApresEvolutionPropose = dateDebut && Number(form.montant) > 0 && Number(form.rendementAnnuel) > 0
+    ? calculerCouponPourDate(
+        Number(form.montant),
+        Number(form.rendementAnnuel),
+        form.frequence,
+        dateDebut,
+        new Date(`${DATE_CHANGEMENT_FISCALITE}T00:00:00`),
+        true,
+      )
+    : null;
 
   useEffect(() => {
+    initialisationRef.current = true;
     setForm(dealVersFormState(dealExistant));
   }, [dealExistant]);
 
@@ -68,6 +84,28 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
       setForm((f) => ({ ...f, appliquerEvolutionFiscale: false }));
     }
   }, [evolutionFiscaleEligible, form.appliquerEvolutionFiscale]);
+
+  useEffect(() => {
+    if (initialisationRef.current) {
+      initialisationRef.current = false;
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      montantCouponApresEvolutionFiscale: evolutionFiscaleEligible && f.appliquerEvolutionFiscale && couponApresEvolutionPropose !== null
+        ? String(couponApresEvolutionPropose)
+        : "",
+    }));
+  }, [
+    evolutionFiscaleEligible,
+    form.appliquerEvolutionFiscale,
+    form.dateDebut,
+    form.montant,
+    form.rendementAnnuel,
+    form.frequence,
+    form.dureeInitiale,
+    couponApresEvolutionPropose,
+  ]);
 
   function majChamp<K extends keyof FormState>(champ: K, valeur: FormState[K]) {
     setForm((f) => ({ ...f, [champ]: valeur }));
@@ -90,6 +128,15 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
     ) {
       nouvellesErreurs.dureeProlongationMois = "Durée de prolongation requise";
     }
+    if (
+      evolutionFiscaleEligible &&
+      form.appliquerEvolutionFiscale &&
+      (form.montantCouponApresEvolutionFiscale === "" ||
+        !Number.isFinite(Number(form.montantCouponApresEvolutionFiscale)) ||
+        Number(form.montantCouponApresEvolutionFiscale) < 0)
+    ) {
+      nouvellesErreurs.montantCouponApresEvolutionFiscale = "Montant de coupon invalide";
+    }
     setErreurs(nouvellesErreurs);
     return Object.keys(nouvellesErreurs).length === 0;
   }
@@ -110,6 +157,9 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         nombreMaxProlongations: Number(form.nombreMaxProlongations),
         dureeProlongationMois: form.dureeProlongationMois ? Number(form.dureeProlongationMois) : 0,
         appliquerEvolutionFiscale: evolutionFiscaleEligible && form.appliquerEvolutionFiscale,
+        montantCouponApresEvolutionFiscale: evolutionFiscaleEligible && form.appliquerEvolutionFiscale
+          ? Number(form.montantCouponApresEvolutionFiscale)
+          : undefined,
       };
       await onSubmit(deal);
     } finally {
@@ -217,21 +267,48 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
 
       {evolutionFiscaleEligible && (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
-          <label htmlFor="evolution-fiscale" className="flex cursor-pointer items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-medium">Appliquer l’évolution de la CSG de 2026</span>
-            <input
-              id="evolution-fiscale"
-              type="checkbox"
+            <button
+              type="button"
               role="switch"
               aria-checked={form.appliquerEvolutionFiscale}
-              checked={form.appliquerEvolutionFiscale}
-              onChange={(event) => majChamp("appliquerEvolutionFiscale", event.target.checked)}
-              className="h-5 w-9 accent-emerald-600"
-            />
-          </label>
+              aria-label="Appliquer l’évolution de la CSG de 2026"
+              onClick={() => majChamp("appliquerEvolutionFiscale", !form.appliquerEvolutionFiscale)}
+              className={
+                "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 " +
+                (form.appliquerEvolutionFiscale ? "bg-emerald-600" : "bg-slate-300 dark:bg-slate-700")
+              }
+            >
+              <span
+                aria-hidden="true"
+                className={
+                  "h-5 w-5 rounded-full bg-white shadow-sm transition-transform " +
+                  (form.appliquerEvolutionFiscale ? "translate-x-5" : "translate-x-0")
+                }
+              />
+            </button>
+          </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Les coupons à partir du 1er janvier 2026 seront ajustés selon le nouveau taux.
           </p>
+          {form.appliquerEvolutionFiscale && (
+            <Champ label="Montant du coupon après le 1er janvier 2026 (€)" erreur={erreurs.montantCouponApresEvolutionFiscale}>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={form.montantCouponApresEvolutionFiscale}
+                aria-label="Montant du coupon après le 1er janvier 2026 (€)"
+                onChange={(e) => majChamp("montantCouponApresEvolutionFiscale", e.target.value)}
+                className="h-12 text-base"
+              />
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Montant proposé après arrondi. Modifiez-le si votre promoteur applique un autre montant.
+              </span>
+            </Champ>
+          )}
         </div>
       )}
 

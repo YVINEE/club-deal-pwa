@@ -45,7 +45,15 @@ export function calculerCouponPourDate(
   dateDebut: Date,
   dateEcheance: Date,
   appliquerEvolutionFiscale = false,
+  montantCouponApresEvolutionFiscale?: number,
 ): number {
+  if (
+    appliquerEvolutionFiscale &&
+    montantCouponApresEvolutionFiscale !== undefined &&
+    dateEcheance >= new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00")
+  ) {
+    return montantCouponApresEvolutionFiscale;
+  }
   const tauxNetEffectif = calculerTauxNetEffectif(rendementNet, dateDebut, dateEcheance, appliquerEvolutionFiscale);
   return montant * (tauxNetEffectif / 100) * (frequenceEnMois(frequence) / 12);
 }
@@ -101,6 +109,7 @@ function genererEcheancesPourPeriode(
         deal.dateDebut,
         dateCourante,
         deal.appliquerEvolutionFiscale === true,
+        deal.montantCouponApresEvolutionFiscale,
       ),
       encaissee: false,
     });

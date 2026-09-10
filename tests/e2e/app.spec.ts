@@ -257,10 +257,13 @@ test("active l’évolution de la CSG 2026 pour un deal éligible", async ({ pag
   await expect(evolution).toHaveAttribute("aria-checked", "false");
   await evolution.click();
   await expect(evolution).toHaveAttribute("aria-checked", "true");
+  const montantCoupon = page.getByLabel("Montant du coupon après le 1er janvier 2026 (€)");
+  await expect(montantCoupon).toHaveValue("295");
+  await montantCoupon.fill("296");
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await page.getByRole("heading", { name: "Deal CSG 2026", exact: true }).click();
   await expect(page.getByText("Coupons ajustés depuis le 1er janvier 2026", { exact: true })).toBeVisible();
-  await expect(page.getByText("295,00 €", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("296,00 €", { exact: true }).first()).toBeVisible();
 });
 
 test("filtre les deals et les échéances", async ({ page }) => {
