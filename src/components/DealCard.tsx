@@ -11,6 +11,7 @@ interface DealCardProps {
   prochaineEcheanceDate?: Date;
   prochaineEcheanceMontant?: number;
   onClick: () => void;
+  id?: string;
 }
 
 const BADGE_CONFIG: Record<StatutDeal, { label: string; dot: string }> = {
@@ -26,6 +27,7 @@ export function DealCard({
   prochaineEcheanceDate,
   prochaineEcheanceMontant,
   onClick,
+  id,
 }: DealCardProps) {
   const badge = BADGE_CONFIG[statut];
   const progression = calculerProgression(deal.dateDebut, dateFin);
@@ -44,6 +46,7 @@ export function DealCard({
 
   return (
     <div
+      id={id}
       onClick={onClick}
       className="cursor-pointer rounded-2xl border border-transparent bg-white p-4 shadow-sm transition-opacity active:opacity-80 dark:border-white/5 dark:bg-[#111827]"
     >

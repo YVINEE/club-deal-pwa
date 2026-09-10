@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDeals } from "./hooks/useDeals";
-import { DealList } from "./components/DealList";
+import { DealList, DealsNavigationState, DealListViewState } from "./components/DealList";
 import { DealDetail } from "./components/DealDetail";
 import { DealForm } from "./components/DealForm";
 import { Deal } from "./types";
@@ -284,8 +284,12 @@ function EcranListe() {
   const navigate = useNavigate();
   return (
     <DealList
-      onSelectDeal={(dealId) => navigate(`/deal/${dealId}`)}
-      onAjouterDeal={() => navigate("/nouveau")}
+      onSelectDeal={(dealId, etatRetour: DealListViewState) =>
+        navigate(`/deal/${dealId}`, { state: { retourDeals: etatRetour } })
+      }
+      onAjouterDeal={(etatRetour: DealListViewState) =>
+        navigate("/nouveau", { state: { retourDeals: etatRetour } })
+      }
     />
   );
 }
@@ -297,14 +301,19 @@ function EcranDetail({
 }) {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
+  const navigationState = useLocation().state as DealsNavigationState | null;
   if (!dealId) return null;
+
+  function revenirAuxDeals() {
+    navigate("/deals", { state: navigationState });
+  }
 
   return (
     <DealDetail
       dealId={dealId}
       suiviEncaissementsActif={suiviEncaissementsActif}
-      onRetour={() => navigate("/deals")}
-      onModifier={() => navigate(`/deal/${dealId}/modifier`)}
+      onRetour={revenirAuxDeals}
+      onModifier={() => navigate(`/deal/${dealId}/modifier`, { state: navigationState })}
     />
   );
 }
@@ -312,6 +321,7 @@ function EcranDetail({
 function EcranFormulaire() {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
+  const navigationState = useLocation().state as DealsNavigationState | null;
   const { deals, creer, modifier } = useDeals();
 
   const dealExistant = dealId ? deals.find((d) => d.deal.id === dealId)?.deal : undefined;
@@ -319,10 +329,10 @@ function EcranFormulaire() {
   async function gererSoumission(deal: Deal) {
     if (dealExistant) {
       await modifier(deal);
-      navigate("/deals");
+      navigate("/deals", { state: navigationState });
     } else {
       await creer(deal);
-      navigate("/deals");
+      navigate("/deals", { state: navigationState });
     }
   }
 
@@ -330,7 +340,7 @@ function EcranFormulaire() {
     <DealForm
       dealExistant={dealExistant}
       onSubmit={gererSoumission}
-      onAnnuler={() => navigate("/deals")}
+      onAnnuler={() => navigate("/deals", { state: navigationState })}
     />
   );
 }

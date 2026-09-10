@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDeals } from "../hooks/useDeals";
 import { DealCard } from "./DealCard";
 import { Plus } from "lucide-react";
 
 interface DealListProps {
-  onSelectDeal: (dealId: string) => void;
-  onAjouterDeal: () => void;
+  onSelectDeal: (dealId: string, etatRetour: DealListViewState) => void;
+  onAjouterDeal: (etatRetour: DealListViewState) => void;
 }
 
 const optionsTri = ["prochaineEcheance", "montant", "dateFin"] as const;
-type TriDeals = (typeof optionsTri)[number];
+export type TriDeals = (typeof optionsTri)[number];
+type FiltreDeals = "tous" | "actifs" | "prolongation";
 const cleTri = "club-deal-tri-deals";
+
+export interface DealListViewState {
+  scrollY: number;
+  filtre: FiltreDeals;
+  tri: TriDeals;
+  dealId?: string;
+}
+
+export interface DealsNavigationState {
+  retourDeals?: DealListViewState;
+}
 
 function lireTri(): TriDeals {
   const valeur = localStorage.getItem(cleTri);
@@ -23,9 +36,13 @@ export function DealList({
   onSelectDeal,
   onAjouterDeal,
 }: DealListProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { deals, loading, error } = useDeals();
-  const [filtre, setFiltre] = useState<"tous" | "actifs" | "prolongation">("tous");
-  const [tri, setTri] = useState<TriDeals>(lireTri);
+  const etatRetour = (location.state as DealsNavigationState | null)?.retourDeals;
+  const [filtre, setFiltre] = useState<FiltreDeals>(() => etatRetour?.filtre ?? "tous");
+  const [tri, setTri] = useState<TriDeals>(() => etatRetour?.tri ?? lireTri());
+  const restaurationEffectuee = useRef(false);
   const dealsTries = [...deals].sort((a, b) => {
     if (tri === "montant") {
       return b.deal.montant - a.deal.montant
@@ -47,6 +64,30 @@ export function DealList({
     if (filtre === "prolongation") return statut === "enProlongation";
     return true;
   });
+
+  useEffect(() => {
+    if (loading || restaurationEffectuee.current) return;
+    restaurationEffectuee.current = true;
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo(0, etatRetour?.scrollY ?? 0);
+      if (etatRetour) navigate(".", { replace: true, state: null });
+      if (!etatRetour?.dealId) return;
+
+      const cible = document.getElementById(`deal-card-${etatRetour.dealId}`);
+      if (!cible) return;
+      const margeHaute = 80;
+      const margeBasse = window.innerHeight - 100;
+      const rect = cible.getBoundingClientRect();
+      if (rect.top < margeHaute || rect.bottom > margeBasse) {
+        cible.scrollIntoView({ block: "center" });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, deals.length, etatRetour, navigate]);
+
+  function etatVue(dealId?: string): DealListViewState {
+    return { scrollY: window.scrollY, filtre, tri, dealId };
+  }
 
   if (loading) {
     return <div className="p-4 text-center text-gray-500">Chargement des deals...</div>;
@@ -123,19 +164,20 @@ export function DealList({
           {dealsFiltres.map(({ deal, statut, dateFin, prochaineEcheanceDate, prochaineEcheanceMontant }) => (
             <DealCard
               key={deal.id}
+              id={`deal-card-${deal.id}`}
               deal={deal}
               statut={statut}
               dateFin={dateFin}
               prochaineEcheanceDate={prochaineEcheanceDate}
               prochaineEcheanceMontant={prochaineEcheanceMontant}
-              onClick={() => onSelectDeal(deal.id)}
+              onClick={() => onSelectDeal(deal.id, etatVue(deal.id))}
             />
           ))}
         </div>
       )}
 
       <button
-        onClick={onAjouterDeal}
+        onClick={() => onAjouterDeal(etatVue())}
         aria-label="Ajouter un deal"
         className="fixed bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-2xl text-white shadow-lg transition-colors active:bg-emerald-700"
       >
