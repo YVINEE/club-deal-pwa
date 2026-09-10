@@ -100,12 +100,13 @@ test("restaure la position, le tri et le filtre après les retours d’un deal",
   await page.getByLabel("Trier les deals").selectOption("montant");
   await page.getByRole("group", { name: "Filtrer les deals" }).getByRole("button", { name: /^Actifs/ }).click();
   const deal = page.getByRole("heading", { name: "Deal position 1", exact: true });
-  await deal.scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(deal).toBeInViewport();
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await deal.click();
   await page.getByRole("button", { name: "Retour" }).click();
   await expect(deal).toBeInViewport();
-  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await expect(page.getByLabel("Trier les deals")).toHaveValue("montant");
 
   await deal.click();
@@ -160,6 +161,32 @@ test("pointe puis dépointe une échéance", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Dépointer", exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Dépointer", exact: true }).first().click();
   await expect(page.getByRole("button", { name: "Pointer", exact: true }).first()).toBeVisible();
+});
+
+test("conserve la position après un pointage en bas de la liste des échéances", async ({ page }) => {
+  await openApp(page);
+  await openSettings(page);
+  const suivi = page.getByRole("switch", { name: "Activer le suivi des encaissements" });
+  if ((await suivi.getAttribute("aria-checked")) !== "true") await suivi.click();
+  await openDeals(page);
+  await fillDeal(page, "Deal échéances 1");
+  await fillDeal(page, "Deal échéances 2");
+  await fillDeal(page, "Deal échéances 3");
+  await openDeadlines(page);
+
+  const pointer = page.getByRole("button", { name: "Pointer", exact: true }).last();
+  await pointer.scrollIntoViewIfNeeded();
+  const scrollAvant = await page.evaluate(() => window.scrollY);
+  expect(scrollAvant).toBeGreaterThan(0);
+  await pointer.click();
+  await expect(page.getByRole("button", { name: "Dépointer", exact: true }).last()).toBeVisible();
+  const scrollApresPointage = await page.evaluate(() => window.scrollY);
+  expect(Math.abs(scrollApresPointage - scrollAvant)).toBeLessThan(50);
+
+  await page.getByRole("button", { name: "Dépointer", exact: true }).last().click();
+  await expect(page.getByRole("button", { name: "Pointer", exact: true }).last()).toBeVisible();
+  const scrollApresDepointage = await page.evaluate(() => window.scrollY);
+  expect(Math.abs(scrollApresDepointage - scrollApresPointage)).toBeLessThan(50);
 });
 
 test("change de thème clair puis sombre", async ({ page }) => {

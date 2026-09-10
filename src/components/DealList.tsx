@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useDeals } from "../hooks/useDeals";
 import { DealCard } from "./DealCard";
 import { Plus } from "lucide-react";
@@ -37,7 +37,6 @@ export function DealList({
   onAjouterDeal,
 }: DealListProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { deals, loading, error } = useDeals();
   const etatRetour = (location.state as DealsNavigationState | null)?.retourDeals;
   const [filtre, setFiltre] = useState<FiltreDeals>(() => etatRetour?.filtre ?? "tous");
@@ -68,22 +67,37 @@ export function DealList({
   useEffect(() => {
     if (loading || restaurationEffectuee.current) return;
     restaurationEffectuee.current = true;
+    let secondeFrame = 0;
+    let restaurationDifferee: number | undefined;
     const frame = window.requestAnimationFrame(() => {
-      window.scrollTo(0, etatRetour?.scrollY ?? 0);
-      if (etatRetour) navigate(".", { replace: true, state: null });
-      if (!etatRetour?.dealId) return;
+      const restaurerDefilement = () => {
+        window.scrollTo(0, etatRetour?.scrollY ?? 0);
+        if (!etatRetour?.dealId) return;
 
-      const cible = document.getElementById(`deal-card-${etatRetour.dealId}`);
-      if (!cible) return;
-      const margeHaute = 80;
-      const margeBasse = window.innerHeight - 100;
-      const rect = cible.getBoundingClientRect();
-      if (rect.top < margeHaute || rect.bottom > margeBasse) {
-        cible.scrollIntoView({ block: "center" });
-      }
+        const cible = document.getElementById(`deal-card-${etatRetour.dealId}`);
+        if (!cible) return;
+        const margeHaute = 80;
+        const margeBasse = window.innerHeight - 100;
+        const rect = cible.getBoundingClientRect();
+        if (rect.top < margeHaute || rect.bottom > margeBasse) {
+          cible.scrollIntoView({ block: "center" });
+        }
+      };
+
+      secondeFrame = window.requestAnimationFrame(() => {
+        restaurerDefilement();
+        if (etatRetour) {
+          window.history.replaceState({ ...window.history.state, usr: null }, "", window.location.href);
+          restaurationDifferee = window.setTimeout(restaurerDefilement, 100);
+        }
+      });
     });
-    return () => window.cancelAnimationFrame(frame);
-  }, [loading, deals.length, etatRetour, navigate]);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(secondeFrame);
+      if (restaurationDifferee !== undefined) window.clearTimeout(restaurationDifferee);
+    };
+  }, [loading, deals.length, etatRetour]);
 
   function etatVue(dealId?: string): DealListViewState {
     return { scrollY: window.scrollY, filtre, tri, dealId };

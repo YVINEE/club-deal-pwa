@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Echeance } from "../types";
 import { lirePortefeuille } from "../db/secureStorage";
 
@@ -9,9 +9,10 @@ export interface EcheanceAvecDeal extends Echeance {
 export function useToutesLesEcheances(refreshKey: number = 0) {
   const [echeances, setEcheances] = useState<EcheanceAvecDeal[]>([]);
   const [loading, setLoading] = useState(true);
+  const chargementInitial = useRef(true);
 
   const charger = useCallback(async () => {
-    setLoading(true);
+    if (chargementInitial.current) setLoading(true);
     try {
       const data = await lirePortefeuille();
       const toutesEcheances = [...data.echeances].sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -29,6 +30,7 @@ export function useToutesLesEcheances(refreshKey: number = 0) {
       console.error("Erreur lors du chargement des échéances à venir", e);
     } finally {
       setLoading(false);
+      chargementInitial.current = false;
     }
   }, []);
 

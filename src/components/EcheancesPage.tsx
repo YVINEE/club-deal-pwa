@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { annulerEcheanceEncaissee, marquerEcheanceEncaissee } from "../db/repositories";
@@ -19,6 +19,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
   const [filtre, setFiltre] = useState<FiltreEcheances>("toutes");
+  const scrollARestaurer = useRef<number | null>(null);
   const { echeances, loading } = useToutesLesEcheances(refreshKey);
   const maintenant = useMemo(() => new Date(), [refreshKey]);
 
@@ -31,6 +32,17 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
     .filter((echeance) => echeance.encaissee)
     .reduce((total, echeance) => total + echeance.montant, 0);
   const totalARecevoir = totalEcheances - totalEncaisse;
+
+  useEffect(() => {
+    if (loading || scrollARestaurer.current === null) return;
+    const scrollY = scrollARestaurer.current;
+    const frame = window.requestAnimationFrame(() => {
+      const hauteurMaximale = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo(0, Math.min(scrollY, hauteurMaximale));
+      scrollARestaurer.current = null;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [echeances, loading]);
 
   const echeancesFiltrees = useMemo(() => {
     const echeancesTriees = [...echeances].sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -57,11 +69,13 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   }
 
   async function pointer(echeanceId: string) {
+    scrollARestaurer.current = window.scrollY;
     await marquerEcheanceEncaissee(echeanceId);
     setRefreshKey((value) => value + 1);
   }
 
   async function depointer(echeanceId: string) {
+    scrollARestaurer.current = window.scrollY;
     await annulerEcheanceEncaissee(echeanceId);
     setRefreshKey((value) => value + 1);
   }
