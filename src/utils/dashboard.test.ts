@@ -39,7 +39,7 @@ describe("calculerSyntheseDashboard", () => {
     const ancienDeal = deal(10000, "2025-01-01");
     ancienDeal.deal.appliquerEvolutionFiscale = true;
 
-    expect(calculerSyntheseDashboard([ancienDeal], new Date("2026-02-01")).rendementMoyenPondere).toBeCloseTo(7.84);
+    expect(calculerSyntheseDashboard([ancienDeal], new Date("2026-02-01")).rendementMoyenPondere).toBe(7.8);
   });
 
   it("génère une courbe cumulée et identifie la prochaine échéance", () => {

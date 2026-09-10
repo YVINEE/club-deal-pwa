@@ -32,9 +32,10 @@ export function calculerTauxNetEffectif(
 ): number {
   const changement = new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
   if (!appliquerEvolutionFiscale || !dealCommenceAvantEvolutionFiscale(dateDebut) || dateEcheance < changement) return rendementNet;
-  return rendementNet
+  const tauxAjuste = rendementNet
     * (1 - TAUX_PRELEVEMENT_DEPUIS_2026 / 100)
     / (1 - TAUX_PRELEVEMENT_AVANT_2026 / 100);
+  return Math.round((tauxAjuste + Number.EPSILON) * 10) / 10;
 }
 
 export function calculerCouponPourDate(

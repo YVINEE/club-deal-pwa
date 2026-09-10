@@ -65,6 +65,8 @@ describe("fiscalité des coupons", () => {
   it("ajuste le taux net à partir du 1er janvier 2026", () => {
     expect(calculerTauxNetEffectif(10, date(2025, 1, 1), date(2026, 1, 1), true)).toBeCloseTo(9.8);
     expect(calculerCouponPourDate(10000, 10, "trimestriel", date(2025, 1, 1), date(2026, 1, 1), true)).toBeCloseTo(245);
+    expect(calculerTauxNetEffectif(12, date(2025, 1, 1), date(2026, 1, 1), true)).toBe(11.8);
+    expect(calculerCouponPourDate(10000, 12, "trimestriel", date(2025, 1, 1), date(2026, 1, 1), true)).toBe(295);
   });
 
   it("ne modifie pas un deal commencé à partir de 2026", () => {
