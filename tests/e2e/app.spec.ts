@@ -50,6 +50,9 @@ test("crée, annule, modifie et revient à la liste des deals", async ({ page })
   await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
 
   await fillDeal(page);
+  await page.getByRole("link", { name: "Tableau de bord" }).click();
+  await expect(page.getByText(/Aujourd’hui ·/).first()).toBeVisible();
+  await openDeals(page);
   await page.getByRole("heading", { name: dealName, exact: true }).click();
   await expect(page.getByRole("region", { name: "Valeur actuelle du deal" })).toBeVisible();
   await expect(page.getByText("Valeur actuelle", { exact: true })).toBeVisible();
@@ -204,6 +207,38 @@ test("exporte puis importe un JSON", async ({ page, browser }) => {
   }
 });
 
+test("trie les deals par échéance, montant et date de fin", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+
+  async function createDeal(name: string, startDate: string, amount: string) {
+    await page.getByRole("button", { name: "Ajouter un deal" }).click();
+    const fields = page.locator("form input");
+    await fields.nth(0).fill(name);
+    await fields.nth(1).fill(startDate);
+    await fields.nth(2).fill(amount);
+    await fields.nth(3).fill("12");
+    await fields.nth(4).fill("12");
+    await fields.nth(5).fill("0");
+    await page.getByRole("button", { name: "Créer", exact: true }).click();
+  }
+
+  await createDeal("Deal A", "2027-01-15", "5000");
+  await createDeal("Deal B", "2027-02-15", "15000");
+
+  const cards = page.locator("h3");
+  await expect(page.getByLabel("Trier les deals")).toHaveValue("prochaineEcheance");
+  await expect(cards).toHaveText(["Deal A", "Deal B"]);
+
+  await page.getByLabel("Trier les deals").selectOption("montant");
+  await expect(cards).toHaveText(["Deal B", "Deal A"]);
+
+  await page.getByLabel("Trier les deals").selectOption("dateFin");
+  await expect(cards).toHaveText(["Deal A", "Deal B"]);
+  await page.reload();
+  await expect(page.getByLabel("Trier les deals")).toHaveValue("dateFin");
+});
+
 test("filtre les deals et les échéances", async ({ page }) => {
   await openApp(page);
   await openDeals(page);
@@ -212,7 +247,7 @@ test("filtre les deals et les échéances", async ({ page }) => {
   const dealFilters = page.getByRole("group", { name: "Filtrer les deals" });
   await dealFilters.getByRole("button", { name: /^Actifs/ }).click();
   await expect(page.getByText("Aucun deal dans ce filtre.")).toBeVisible();
-  await dealFilters.getByRole("button", { name: /^En prolongation/ }).click();
+  await dealFilters.getByRole("button", { name: /^Prolongés/ }).click();
   await expect(page.getByText("Aucun deal dans ce filtre.")).toBeVisible();
 
   await openDeadlines(page);

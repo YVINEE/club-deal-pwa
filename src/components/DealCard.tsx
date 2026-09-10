@@ -1,6 +1,6 @@
 import { Deal, StatutDeal } from "../types";
 import { differenceInCalendarDays, differenceInCalendarMonths } from "date-fns";
-import { ArrowDownToLine, CalendarDays, Clock3 } from "lucide-react";
+import { ArrowDownToLine, CalendarClock, CalendarDays, Clock3 } from "lucide-react";
 import { formatDateCourteFr, formatDateFr } from "../utils/dateUtils";
 
 interface DealCardProps {
@@ -58,9 +58,27 @@ export function DealCard({
         {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
 
-      <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-        <span>Fin prévue</span>
-        <span className="font-medium text-slate-700 dark:text-slate-300">{formatDateCourteFr(dateFin)}</span>
+      <div
+        className={
+          "mb-3 flex items-center gap-3 rounded-xl border p-3 " +
+          (statut === "enProlongation"
+            ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10"
+            : "border-blue-100 bg-blue-50/70 dark:border-blue-500/20 dark:bg-blue-500/10")
+        }
+      >
+        <CalendarClock
+          size={20}
+          className={statut === "enProlongation" ? "text-amber-600 dark:text-amber-300" : "text-blue-600 dark:text-blue-300"}
+          aria-hidden="true"
+        />
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Fin prévue
+          </div>
+          <div className="mt-0.5 text-base font-semibold text-slate-900 dark:text-white">
+            {formatDateFr(dateFin)}
+          </div>
+        </div>
       </div>
 
       {prochaineEcheanceDate && statut !== "termine" && (

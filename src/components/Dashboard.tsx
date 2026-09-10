@@ -208,8 +208,6 @@ function Courbe({ points }: { points: PointCourbe[] }) {
   const xAujourdHui = marge + ratioAujourdHui * (largeur - marge * 2);
   const indexAujourdHui = Math.min(pointsCourbe.length - 1, Math.max(0, Math.round(ratioAujourdHui * (pointsCourbe.length - 1))));
   const pointAujourdHui = coordonnees[indexAujourdHui];
-  const largeurEtiquette = 82;
-  const xEtiquette = Math.min(largeur - marge - largeurEtiquette, Math.max(marge, xAujourdHui - largeurEtiquette / 2));
 
   return (
     <div className="mt-5">
@@ -232,6 +230,15 @@ function Courbe({ points }: { points: PointCourbe[] }) {
           <span><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-400" />Réel</span>
           <span><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-purple-400" />Projeté</span>
       </div>
+      <div className="mb-2 flex justify-center">
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200"
+          aria-label={"Repère : Aujourd’hui, " + formatDateFr(new Date())}
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+          Aujourd’hui · {formatDateFr(new Date())}
+        </span>
+      </div>
       <svg
         viewBox={"0 0 " + largeur + " " + hauteur}
         className="h-44 w-full"
@@ -245,9 +252,7 @@ function Courbe({ points }: { points: PointCourbe[] }) {
           </linearGradient>
         </defs>
         <polygon points={aire} fill="url(#dashboard-area)" />
-        <line x1={xAujourdHui} x2={xAujourdHui} y1={marge + 18} y2={base} stroke="#10b981" strokeDasharray="5 3" strokeOpacity="0.9" strokeWidth="2" />
-        <rect x={xEtiquette} y="1" width={largeurEtiquette} height="18" rx="9" fill="#a7f3d0" />
-        <text x={xEtiquette + largeurEtiquette / 2} y="13" textAnchor="middle" fontSize="10" fontWeight="600" fill="#065f46">Aujourd’hui</text>
+        <line x1={xAujourdHui} x2={xAujourdHui} y1={marge} y2={base} stroke="#10b981" strokeDasharray="5 3" strokeOpacity="0.9" strokeWidth="2" />
         <circle cx={xAujourdHui} cy={pointAujourdHui.y} r="6" fill="#0e1422" stroke="#34d399" strokeWidth="2.5" />
         <polyline points={ligne} fill="none" stroke="#3b82f6" strokeOpacity="0.2" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
         <polyline points={ligneHistorique} fill="none" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />

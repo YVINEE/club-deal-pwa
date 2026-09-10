@@ -166,7 +166,7 @@ export function SecuritySettings({
               className="w-full justify-center gap-2"
             >
               {storageMode === "encrypted" ? <LockKeyhole size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
-              {storageMode === "encrypted" ? "Retirer le mot de passe" : "Mettre un mot de passe"}
+              {storageMode === "encrypted" ? "Désactiver le mot de passe" : "Mettre un mot de passe"}
             </Button>
             {storageMode === "encrypted" && (
               <Button type="button" variant="outline" onClick={() => setActionChiffrement("modifier")} className="w-full justify-center">
@@ -223,7 +223,7 @@ export function SecuritySettings({
                   ? "Mettre le mot de passe"
                   : actionChiffrement === "modifier"
                     ? "Changer le mot de passe"
-                    : "Retirer le mot de passe"}
+              : "Désactiver le mot de passe"}
               </Button>
               <Button type="button" variant="outline" onClick={() => { reinitialiserChiffrement(); setActionChiffrement(null); }} className="w-full sm:w-auto">
                 Annuler

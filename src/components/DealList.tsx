@@ -8,16 +8,36 @@ interface DealListProps {
   onAjouterDeal: () => void;
 }
 
+const optionsTri = ["prochaineEcheance", "montant", "dateFin"] as const;
+type TriDeals = (typeof optionsTri)[number];
+const cleTri = "club-deal-tri-deals";
+
+function lireTri(): TriDeals {
+  const valeur = localStorage.getItem(cleTri);
+  return optionsTri.includes(valeur as TriDeals)
+    ? (valeur as TriDeals)
+    : "prochaineEcheance";
+}
+
 export function DealList({
   onSelectDeal,
   onAjouterDeal,
 }: DealListProps) {
   const { deals, loading, error } = useDeals();
   const [filtre, setFiltre] = useState<"tous" | "actifs" | "prolongation">("tous");
+  const [tri, setTri] = useState<TriDeals>(lireTri);
   const dealsTries = [...deals].sort((a, b) => {
-    const dateA = a.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-    const dateB = b.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-    return dateA - dateB;
+    if (tri === "montant") {
+      return b.deal.montant - a.deal.montant
+        || (a.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER)
+        || a.deal.nom.localeCompare(b.deal.nom, "fr");
+    }
+    if (tri === "dateFin") {
+      return a.dateFin.getTime() - b.dateFin.getTime()
+        || a.deal.nom.localeCompare(b.deal.nom, "fr");
+    }
+    return (a.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.prochaineEcheanceDate?.getTime() ?? Number.MAX_SAFE_INTEGER)
+      || a.deal.nom.localeCompare(b.deal.nom, "fr");
   });
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine");
   const dealsEnProlongation = deals.filter(({ statut }) => statut === "enProlongation");
@@ -49,11 +69,30 @@ export function DealList({
         </div>
       </div>
       {deals.length > 0 && (
-        <div className="mb-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrer les deals">
+        <>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <label htmlFor="tri-deals" className="text-xs text-slate-500 dark:text-slate-400">Trier par</label>
+            <select
+              id="tri-deals"
+              aria-label="Trier les deals"
+              value={tri}
+              onChange={(event) => {
+                const valeur = event.target.value as TriDeals;
+                setTri(valeur);
+                localStorage.setItem(cleTri, valeur);
+              }}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+            >
+              <option value="prochaineEcheance">Prochaine échéance</option>
+              <option value="montant">Montant investi</option>
+              <option value="dateFin">Date de fin</option>
+            </select>
+          </div>
+          <div className="mb-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrer les deals">
           {([
             ["tous", `Tous (${deals.length})`],
             ["actifs", `Actifs (${deals.filter(({ statut }) => statut === "actif").length})`],
-            ["prolongation", `En prolongation (${dealsEnProlongation.length})`],
+            ["prolongation", `Prolongés (${dealsEnProlongation.length})`],
           ] as const).map(([value, label]) => (
             <button
               key={value}
@@ -70,7 +109,8 @@ export function DealList({
               {label}
             </button>
           ))}
-        </div>
+          </div>
+        </>
       )}
       {deals.length === 0 ? (
         <div className="p-8 text-center text-gray-500">
