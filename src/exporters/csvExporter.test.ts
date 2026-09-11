@@ -33,4 +33,9 @@ describe("genererCsv", () => {
   it("génère uniquement l'en-tête sans échéance", () => {
     expect(genererCsv(deal, [])).toBe("Date;Montant;Type;Deal");
   });
+
+  it("échappe les séparateurs et neutralise les formules", () => {
+    const csv = genererCsv({ ...deal, nom: '=HYPERLINK("https://exemple.test");Nom' }, [echeances[0]]);
+    expect(csv).toContain(';"\'=HYPERLINK(""https://exemple.test"");Nom"');
+  });
 });

@@ -133,13 +133,13 @@ describe("genererEcheances", () => {
 
 describe("creerProlongation", () => {
   it("crée la prolongation suivante à partir de la fin courante", () => {
-    const deal = creerDeal();
+    const deal = creerDeal({ dateDebut: date(2026, 1, 15) });
     const prolongations: Prolongation[] = [
       {
         id: "prolongation-1",
         dealId: deal.id,
-        dateDebut: date(2025, 1, 15),
-        dateFin: date(2025, 7, 15),
+        dateDebut: date(2027, 1, 15),
+        dateFin: date(2027, 7, 15),
         ordre: 1,
       },
     ];
@@ -148,8 +148,8 @@ describe("creerProlongation", () => {
 
     expect(prolongation.dealId).toBe(deal.id);
     expect(prolongation.ordre).toBe(2);
-    expect(cleDate(prolongation.dateDebut)).toBe("2025-07-15");
-    expect(cleDate(prolongation.dateFin)).toBe("2026-01-15");
+    expect(cleDate(prolongation.dateDebut)).toBe("2027-07-15");
+    expect(cleDate(prolongation.dateFin)).toBe("2028-01-15");
   });
 
   it("refuse une prolongation lorsque la limite est atteinte", () => {

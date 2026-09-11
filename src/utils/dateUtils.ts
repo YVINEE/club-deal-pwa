@@ -14,6 +14,15 @@ export function formatDateCourteFr(date: Date): string {
   return format(date, "dd MMM yyyy", { locale: fr });
 }
 
+export function formatDateInput(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}
+
+export function parseDateInput(value: string): Date {
+  const [annee, mois, jour] = value.split("-").map(Number);
+  return new Date(annee, mois - 1, jour, 12);
+}
+
 export function frequenceEnMois(frequence: Frequence): number {
   return frequence === "trimestriel" ? 3 : 6;
 }

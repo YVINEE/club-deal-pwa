@@ -41,4 +41,9 @@ describe("genererIcs", () => {
 
     expect(ics).toBe("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ClubDealApp//FR\r\nEND:VCALENDAR");
   });
+
+  it("échappe le nom du deal dans le résumé", () => {
+    const ics = genererIcs({ ...deal, nom: "A;B, C\nD" }, [echeance]);
+    expect(ics).toContain("SUMMARY:Interets A\\;B\\, C\\nD - 300.00EUR");
+  });
 });

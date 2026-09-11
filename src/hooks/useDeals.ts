@@ -13,7 +13,7 @@ export interface DealAvecStatut {
   prochaineEcheanceMontant?: number;
 }
 
-export function useDeals() {
+export function useDeals(suiviEncaissements = false) {
   const [deals, setDeals] = useState<DealAvecStatut[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,9 +23,8 @@ export function useDeals() {
     try {
       const dealsAvecEcheances = await getDealsAvecEcheances();
       const maintenant = new Date();
-
       const enrichis = dealsAvecEcheances.map(({ deal, prolongations, echeances }) => {
-        const prochaine = echeances.find((e) => e.date >= maintenant);
+        const prochaine = echeances.find((e) => suiviEncaissements ? !e.encaissee : e.date > maintenant);
         return {
           deal,
           prolongations,
@@ -45,7 +44,7 @@ export function useDeals() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [suiviEncaissements]);
 
   useEffect(() => {
     rafraichir();
@@ -59,6 +58,7 @@ export function useDeals() {
       } catch (e) {
         setError("Erreur lors de la création du deal");
         console.error(e);
+        throw e;
       }
     },
     [rafraichir]
@@ -72,6 +72,7 @@ export function useDeals() {
       } catch (e) {
         setError("Erreur lors de la modification du deal");
         console.error(e);
+        throw e;
       }
     },
     [rafraichir]
@@ -85,6 +86,7 @@ export function useDeals() {
       } catch (e) {
         setError("Erreur lors de la suppression du deal");
         console.error(e);
+        throw e;
       }
     },
     [rafraichir]

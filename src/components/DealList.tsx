@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 interface DealListProps {
   onSelectDeal: (dealId: string, etatRetour: DealListViewState) => void;
   onAjouterDeal: (etatRetour: DealListViewState) => void;
+  suiviEncaissements: boolean;
 }
 
 const optionsTri = ["prochaineEcheance", "montant", "dateFin"] as const;
@@ -35,9 +36,10 @@ function lireTri(): TriDeals {
 export function DealList({
   onSelectDeal,
   onAjouterDeal,
+  suiviEncaissements,
 }: DealListProps) {
   const location = useLocation();
-  const { deals, loading, error } = useDeals();
+  const { deals, loading, error } = useDeals(suiviEncaissements);
   const etatRetour = (location.state as DealsNavigationState | null)?.retourDeals;
   const [filtre, setFiltre] = useState<FiltreDeals>(() => etatRetour?.filtre ?? "tous");
   const [tri, setTri] = useState<TriDeals>(() => etatRetour?.tri ?? lireTri());

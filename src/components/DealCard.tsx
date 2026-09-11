@@ -48,6 +48,14 @@ export function DealCard({
     <div
       id={id}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       className="cursor-pointer rounded-2xl border border-transparent bg-white p-4 shadow-sm transition-opacity active:opacity-80 dark:border-white/5 dark:bg-[#111827]"
     >
       <div className="flex justify-between items-start mb-2">
@@ -132,6 +140,10 @@ export function DealCard({
       </div>
       <div
         className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progressionArrondie}
         aria-label={"Avancement contractuel : " + progressionArrondie + "%"}
       >
         <div

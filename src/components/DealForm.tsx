@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculerCouponPourDate, DATE_CHANGEMENT_FISCALITE, dealEligibleEvolutionFiscale } from "../utils/calculs";
-import { addMonths, frequenceEnMois } from "../utils/dateUtils";
+import { calculerCouponPourDate, DATE_CHANGEMENT_FISCALITE, dealEligibleEvolutionFiscale, MAX_DUREE_MOIS } from "../utils/calculs";
+import { addMonths, formatDateInput, frequenceEnMois, parseDateInput } from "../utils/dateUtils";
 
 interface DealFormProps {
   dealExistant?: Deal;
@@ -29,7 +29,7 @@ interface FormState {
 function dealVersFormState(deal?: Deal): FormState {
   return {
     nom: deal?.nom ?? "",
-    dateDebut: deal ? deal.dateDebut.toISOString().slice(0, 10) : "",
+    dateDebut: deal ? formatDateInput(deal.dateDebut) : "",
     montant: deal ? String(deal.montant) : "",
     rendementAnnuel: deal ? String(deal.rendementAnnuel) : "",
     frequence: deal?.frequence ?? "trimestriel",
@@ -47,8 +47,9 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
   const [form, setForm] = useState<FormState>(dealVersFormState(dealExistant));
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [erreurSoumission, setErreurSoumission] = useState<string | null>(null);
   const initialisationRef = useRef(true);
-  const dateDebut = form.dateDebut ? new Date(form.dateDebut) : null;
+  const dateDebut = form.dateDebut ? parseDateInput(form.dateDebut) : null;
   const evolutionFiscaleEligible = dateDebut && Number(form.dureeInitiale) > 0
     ? dealEligibleEvolutionFiscale(dateDebut, Number(form.dureeInitiale))
     : false;
@@ -69,7 +70,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         Number(form.rendementAnnuel),
         form.frequence,
         dateDebut,
-        new Date(`${DATE_CHANGEMENT_FISCALITE}T00:00:00`),
+        parseDateInput(DATE_CHANGEMENT_FISCALITE),
         true,
       )
     : null;
@@ -119,12 +120,12 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
     if (!form.montant || Number(form.montant) <= 0) nouvellesErreurs.montant = "Montant invalide";
     if (!form.rendementAnnuel || Number(form.rendementAnnuel) <= 0)
       nouvellesErreurs.rendementAnnuel = "Rendement invalide";
-    if (!form.dureeInitiale || Number(form.dureeInitiale) <= 0) nouvellesErreurs.dureeInitiale = "Durée invalide";
-    if (form.nombreMaxProlongations === "" || Number(form.nombreMaxProlongations) < 0)
+    if (!form.dureeInitiale || Number(form.dureeInitiale) <= 0 || Number(form.dureeInitiale) > MAX_DUREE_MOIS) nouvellesErreurs.dureeInitiale = `Durée invalide (maximum ${MAX_DUREE_MOIS} mois)`;
+    if (form.nombreMaxProlongations === "" || Number(form.nombreMaxProlongations) < 0 || Number(form.nombreMaxProlongations) > 20)
       nouvellesErreurs.nombreMaxProlongations = "Valeur invalide";
     if (
       Number(form.nombreMaxProlongations) > 0 &&
-      (!form.dureeProlongationMois || Number(form.dureeProlongationMois) <= 0)
+      (!form.dureeProlongationMois || Number(form.dureeProlongationMois) <= 0 || Number(form.dureeProlongationMois) > MAX_DUREE_MOIS || Number(form.dureeProlongationMois) < frequenceEnMois(form.frequence))
     ) {
       nouvellesErreurs.dureeProlongationMois = "Durée de prolongation requise";
     }
@@ -149,7 +150,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
       const deal: Deal = {
         id: dealExistant?.id ?? crypto.randomUUID(),
         nom: form.nom.trim(),
-        dateDebut: new Date(form.dateDebut),
+        dateDebut: parseDateInput(form.dateDebut),
         montant: Number(form.montant),
         rendementAnnuel: Number(form.rendementAnnuel),
         frequence: form.frequence,
@@ -161,7 +162,10 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
           ? Number(form.montantCouponApresEvolutionFiscale)
           : undefined,
       };
+      setErreurSoumission(null);
       await onSubmit(deal);
+    } catch (error) {
+      setErreurSoumission(error instanceof Error ? error.message : "Enregistrement impossible");
     } finally {
       setEnvoiEnCours(false);
     }
@@ -320,6 +324,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
           {envoiEnCours ? "Enregistrement..." : dealExistant ? "Enregistrer" : "Créer"}
         </Button>
       </div>
+      {erreurSoumission && <p role="alert" className="text-sm text-red-600">{erreurSoumission}</p>}
     </form>
   );
 }

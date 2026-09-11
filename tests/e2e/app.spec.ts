@@ -3,6 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 const dealName = "Deal Playwright";
 const oldStartDate = "2024-01-15";
 
+function dateInputDansMois(mois: number): string {
+  const date = new Date();
+  date.setDate(15);
+  date.setMonth(date.getMonth() + mois);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-15`;
+}
+
 async function openApp(page: Page) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Vue d’ensemble" })).toBeVisible();
@@ -89,7 +96,7 @@ test("restaure la position, le tri et le filtre après les retours d’un deal",
     await page.getByRole("button", { name: "Ajouter un deal" }).click();
     const fields = page.locator("form input");
     await fields.nth(0).fill(`Deal position ${index}`);
-    await fields.nth(1).fill(`2027-0${index}-15`);
+    await fields.nth(1).fill(dateInputDansMois(index));
     await fields.nth(2).fill(String(index * 1000));
     await fields.nth(3).fill("12");
     await fields.nth(4).fill("12");
@@ -130,7 +137,7 @@ test("annule la dernière prolongation après confirmation", async ({ page }) =>
 
   const fields = page.locator("form input");
   await fields.nth(0).fill("Deal Prolongation");
-  await fields.nth(1).fill("2026-01-15");
+  await fields.nth(1).fill(dateInputDansMois(3));
   await fields.nth(2).fill("10000");
   await fields.nth(3).fill("12");
   await fields.nth(4).fill("12");
@@ -291,8 +298,8 @@ test("trie les deals par échéance, montant et date de fin", async ({ page }) =
     await page.getByRole("button", { name: "Créer", exact: true }).click();
   }
 
-  await createDeal("Deal A", "2027-01-15", "5000");
-  await createDeal("Deal B", "2027-02-15", "15000");
+  await createDeal("Deal A", dateInputDansMois(1), "5000");
+  await createDeal("Deal B", dateInputDansMois(2), "15000");
 
   const cards = page.locator("h3");
   await expect(page.getByLabel("Trier les deals")).toHaveValue("prochaineEcheance");
@@ -346,27 +353,27 @@ test("filtre les deals et les échéances", async ({ page }) => {
   await expect(page.getByText("Aucun deal dans ce filtre.")).toBeVisible();
 
   await openDeadlines(page);
-  const deadlineFilters = page.getByRole("tablist", { name: "Filtrer les échéances" });
-  await deadlineFilters.getByRole("tab", { name: /^À pointer/ }).click();
+  const deadlineFilters = page.getByLabel("Filtrer les échéances");
+  await deadlineFilters.getByRole("button", { name: /^À pointer/ }).click();
   await expect(page.getByText(dealName, { exact: true }).first()).toBeVisible();
-  await deadlineFilters.getByRole("tab", { name: /^Encaissées/ }).click();
+  await deadlineFilters.getByRole("button", { name: /^Encaissées/ }).click();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
 });
 
 test("filtre les échéances à venir", async ({ page }) => {
   await openApp(page);
   await openDeals(page);
-  await fillDeal(page, "Deal futur", "2027-01-15");
+  await fillDeal(page, "Deal futur", dateInputDansMois(6));
   await openDeadlines(page);
 
-  const deadlineFilters = page.getByRole("tablist", { name: "Filtrer les échéances" });
-  await expect(deadlineFilters.getByRole("tab", { name: /^À venir/ })).toBeVisible();
-  await deadlineFilters.getByRole("tab", { name: /^À venir/ }).click();
+  const deadlineFilters = page.getByLabel("Filtrer les échéances");
+  await expect(deadlineFilters.getByRole("button", { name: /^À venir/ })).toBeVisible();
+  await deadlineFilters.getByRole("button", { name: /^À venir/ }).click();
   await expect(page.getByText("Deal futur", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toHaveCount(0);
 
-  await deadlineFilters.getByRole("tab", { name: /^À pointer/ }).click();
+  await deadlineFilters.getByRole("button", { name: /^À pointer/ }).click();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
-  await deadlineFilters.getByRole("tab", { name: /^Encaissées/ }).click();
+  await deadlineFilters.getByRole("button", { name: /^Encaissées/ }).click();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
 });

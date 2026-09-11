@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, formatDateCourteFr, formatDateFr, frequenceEnMois } from "./dateUtils";
+import { addMonths, formatDateCourteFr, formatDateFr, formatDateInput, frequenceEnMois, parseDateInput } from "./dateUtils";
 
 function date(annee: number, mois: number, jour: number): Date {
   return new Date(annee, mois - 1, jour, 12);
 }
 
 describe("formatage des dates", () => {
+  it("construit une date de formulaire en heure locale", () => {
+    const valeur = parseDateInput("2026-01-01");
+    expect(formatDateInput(valeur)).toBe("2026-01-01");
+    expect(valeur.getDate()).toBe(1);
+  });
   it("formate une date en français avec le mois complet", () => {
     expect(formatDateFr(date(2026, 10, 8))).toBe("08 octobre 2026");
   });

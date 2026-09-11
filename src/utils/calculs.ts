@@ -1,18 +1,19 @@
 import { Deal, Prolongation, Echeance } from "../types";
-import { addMonths, frequenceEnMois } from "./dateUtils";
+import { addMonths, frequenceEnMois, parseDateInput } from "./dateUtils";
 import { dateFinCourante, peutProlonger } from "./statusUtils";
 
 export const DATE_CHANGEMENT_FISCALITE = "2026-01-01";
 export const TAUX_PRELEVEMENT_AVANT_2026 = 30;
 export const TAUX_PRELEVEMENT_DEPUIS_2026 = 31.4;
+export const MAX_DUREE_MOIS = 1200;
 
 export function dealCommenceAvantEvolutionFiscale(dateDebut: Date): boolean {
-  return dateDebut < new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
+  return dateDebut < parseDateInput(DATE_CHANGEMENT_FISCALITE);
 }
 
 export function dealEligibleEvolutionFiscale(dateDebut: Date, dureeInitiale: number): boolean {
   return dealCommenceAvantEvolutionFiscale(dateDebut)
-    && addMonths(dateDebut, dureeInitiale) > new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
+    && addMonths(dateDebut, dureeInitiale) > parseDateInput(DATE_CHANGEMENT_FISCALITE);
 }
 
 export function calculMontantInteret(deal: Deal): number {
@@ -30,7 +31,7 @@ export function calculerTauxNetEffectif(
   dateEcheance: Date,
   appliquerEvolutionFiscale = false,
 ): number {
-  const changement = new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00");
+  const changement = parseDateInput(DATE_CHANGEMENT_FISCALITE);
   if (!appliquerEvolutionFiscale || !dealCommenceAvantEvolutionFiscale(dateDebut) || dateEcheance < changement) return rendementNet;
   const tauxAjuste = rendementNet
     * (1 - TAUX_PRELEVEMENT_DEPUIS_2026 / 100)
@@ -50,7 +51,7 @@ export function calculerCouponPourDate(
   if (
     appliquerEvolutionFiscale &&
     montantCouponApresEvolutionFiscale !== undefined &&
-    dateEcheance >= new Date(DATE_CHANGEMENT_FISCALITE + "T00:00:00")
+    dateEcheance >= parseDateInput(DATE_CHANGEMENT_FISCALITE)
   ) {
     return montantCouponApresEvolutionFiscale;
   }

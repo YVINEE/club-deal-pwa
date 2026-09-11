@@ -1,5 +1,6 @@
-import { Deal, Prolongation } from "../types";
+import { Deal, Echeance, Prolongation } from "../types";
 import { genererEcheances, creerProlongation } from "../utils/calculs";
+import { dateFinCourante } from "../utils/statusUtils";
 import { enregistrerPortefeuille, lirePortefeuille } from "./secureStorage";
 
 async function recalculerEcheances(dealId: string): Promise<void> {
@@ -52,6 +53,9 @@ export async function prolongerDeal(dealId: string): Promise<void> {
   if (!deal) throw new Error(`Deal ${dealId} introuvable`);
 
   const prolongationsExistantes = data.prolongations.filter((prolongation) => prolongation.dealId === dealId);
+  if (new Date() >= dateFinCourante(deal, prolongationsExistantes)) {
+    throw new Error(`Le deal "${deal.nom}" est arrivé à échéance`);
+  }
   const nouvelleProlongation: Prolongation = creerProlongation(deal, prolongationsExistantes);
 
   data.prolongations.push(nouvelleProlongation);
@@ -87,10 +91,13 @@ export async function annulerEcheanceEncaissee(echeanceId: string): Promise<void
   await enregistrerPortefeuille(data);
 }
 
-export async function getDealsAvecEcheances() {
+export async function getDealsAvecEcheances(): Promise<Array<{
+  deal: Deal;
+  prolongations: Prolongation[];
+  echeances: Echeance[];
+}>> {
   const data = await lirePortefeuille();
-  return Promise.all(
-    data.deals.map(async (deal) => ({
+  return data.deals.map((deal) => ({
       deal,
       prolongations: data.prolongations
         .filter((prolongation) => prolongation.dealId === deal.id)
@@ -98,6 +105,5 @@ export async function getDealsAvecEcheances() {
       echeances: data.echeances
         .filter((echeance) => echeance.dealId === deal.id)
         .sort((a, b) => a.date.getTime() - b.date.getTime()),
-    }))
-  );
+    }));
 }

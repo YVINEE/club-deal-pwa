@@ -113,7 +113,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
       </div>
 
       {!loading && echeances.length > 0 && (
-        <div className="mb-5 flex gap-2" role="tablist" aria-label="Filtrer les échéances">
+        <div className="mb-5 flex gap-2" aria-label="Filtrer les échéances">
           {([
             ["toutes", `Toutes (${echeances.length})`],
             ["aPointer", `À pointer (${nbAPointer})`],
@@ -123,8 +123,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
             <button
               key={valeur}
               type="button"
-              role="tab"
-              aria-selected={filtre === valeur}
+              aria-pressed={filtre === valeur}
               onClick={() => setFiltre(valeur)}
               className={
                 "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors " +

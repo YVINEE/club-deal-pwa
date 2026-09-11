@@ -4,11 +4,10 @@ import {
   Chiffrement,
   chiffrerAvecCle,
   chiffrerTexte,
-  dechiffrerAvecCle,
   dechiffrerTexte,
   motDePasseValide,
 } from "../utils/crypto";
-import { calculerCouponPourDate } from "../utils/calculs";
+import { calculerCouponPourDate, MAX_DUREE_MOIS } from "../utils/calculs";
 
 const MODE_KEY = "club-deal-storage-mode";
 const VAULT_ID = "current";
@@ -107,7 +106,7 @@ function serialiser(data: PortfolioData): string {
   return JSON.stringify(data);
 }
 
-function deserialiser(texte: string): PortfolioData {
+function deserialiser(texte: string, strict = true): PortfolioData {
   const brut = JSON.parse(texte) as {
     deals?: Array<Record<string, unknown>>;
     prolongations?: Array<Record<string, unknown>>;
@@ -121,47 +120,65 @@ function deserialiser(texte: string): PortfolioData {
   const data: PortfolioData = {
     deals: brut.deals.map((deal) => ({
       ...deal,
-      dateDebut: new Date(String(deal.dateDebut)),
+      dateDebut: lireDate(String(deal.dateDebut)),
     })) as unknown as Deal[],
     prolongations: brut.prolongations.map((prolongation) => ({
       ...prolongation,
-      dateDebut: new Date(String(prolongation.dateDebut)),
-      dateFin: new Date(String(prolongation.dateFin)),
+      dateDebut: lireDate(String(prolongation.dateDebut)),
+      dateFin: lireDate(String(prolongation.dateFin)),
     })) as unknown as Prolongation[],
     echeances: brut.echeances.map((echeance) => ({
       ...echeance,
-      date: new Date(String(echeance.date)),
+      date: lireDate(String(echeance.date)),
       encaissee: echeance.encaissee === true,
     })) as unknown as Echeance[],
   };
 
-  validerDonnees(data);
+  validerDonnees(data, { strict });
   return data;
 }
 
-function validerDonnees(data: PortfolioData): void {
-  const dealIds = new Set(data.deals.map((deal) => deal.id));
-  if (
-    data.deals.some((deal) =>
-      typeof deal.id !== "string" ||
-      typeof deal.nom !== "string" ||
-      !Number.isFinite(deal.montant) ||
-      (deal.montantCouponApresEvolutionFiscale !== undefined &&
-        (!Number.isFinite(deal.montantCouponApresEvolutionFiscale) || deal.montantCouponApresEvolutionFiscale < 0))
-    ) ||
-    data.prolongations.some((prolongation) => !dealIds.has(prolongation.dealId)) ||
-    data.echeances.some((echeance) => !dealIds.has(echeance.dealId) || typeof echeance.encaissee !== "boolean")
-  ) {
-    throw new Error("Relations ou types de portefeuille invalides");
+function lireDate(valeur: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(valeur)) {
+    const [annee, mois, jour] = valeur.split("-").map(Number);
+    return new Date(annee, mois - 1, jour, 12);
   }
+  return new Date(valeur);
+}
 
-  const dates = [
-    ...data.deals.map((deal) => deal.dateDebut),
-    ...data.prolongations.flatMap((prolongation) => [prolongation.dateDebut, prolongation.dateFin]),
-    ...data.echeances.map((echeance) => echeance.date),
-  ];
-  if (dates.some((date) => Number.isNaN(date.getTime()))) {
-    throw new Error("Une date du fichier est invalide");
+export function validerDonnees(data: PortfolioData, options: { strict?: boolean } = {}): void {
+  const strict = options.strict !== false;
+  const idsUniques = (ids: string[]) => ids.every((id, index) => id.length > 0 && ids.indexOf(id) === index);
+  const dateValide = (date: Date) => date instanceof Date && !Number.isNaN(date.getTime());
+  const dealIds = new Set(data.deals.map((deal) => deal.id));
+  const frequenceValide = (frequence: unknown) => frequence === "trimestriel" || frequence === "semestriel";
+
+  if (!idsUniques(data.deals.map((deal) => deal.id)) || !idsUniques(data.prolongations.map((item) => item.id)) || !idsUniques(data.echeances.map((item) => item.id))) {
+    throw new Error("Les identifiants du portefeuille doivent être uniques");
+  }
+  if (data.deals.some((deal) =>
+    typeof deal.id !== "string" || typeof deal.nom !== "string" || deal.nom.length === 0 || deal.nom.length > 200 ||
+    !dateValide(deal.dateDebut) || !Number.isFinite(deal.montant) || deal.montant <= 0 ||
+    !Number.isFinite(deal.rendementAnnuel) || deal.rendementAnnuel <= 0 ||
+    !frequenceValide(deal.frequence) || !Number.isFinite(deal.dureeInitiale) || deal.dureeInitiale <= 0 || (strict && (!Number.isInteger(deal.dureeInitiale) || deal.dureeInitiale > MAX_DUREE_MOIS)) ||
+    !Number.isFinite(deal.nombreMaxProlongations) || deal.nombreMaxProlongations < 0 || (strict && (!Number.isInteger(deal.nombreMaxProlongations) || deal.nombreMaxProlongations > 20)) ||
+    !Number.isFinite(deal.dureeProlongationMois) || deal.dureeProlongationMois < 0 || (strict && (!Number.isInteger(deal.dureeProlongationMois) || deal.dureeProlongationMois > MAX_DUREE_MOIS)) ||
+    (strict && deal.nombreMaxProlongations > 0 && deal.dureeProlongationMois < (deal.frequence === "trimestriel" ? 3 : 6)) ||
+    (deal.appliquerEvolutionFiscale !== undefined && typeof deal.appliquerEvolutionFiscale !== "boolean") ||
+    (deal.montantCouponApresEvolutionFiscale !== undefined && (!Number.isFinite(deal.montantCouponApresEvolutionFiscale) || deal.montantCouponApresEvolutionFiscale < 0))
+  )) {
+    throw new Error("Données de deal invalides");
+  }
+  if (data.prolongations.some((item) =>
+    !dealIds.has(item.dealId) || !dateValide(item.dateDebut) || !dateValide(item.dateFin) ||
+    !Number.isInteger(item.ordre) || item.ordre <= 0
+  )) {
+    throw new Error("Données de prolongation invalides");
+  }
+  if (data.echeances.some((item) =>
+    !dealIds.has(item.dealId) || !dateValide(item.date) || !Number.isFinite(item.montant) || item.montant < 0 || typeof item.encaissee !== "boolean"
+  )) {
+    throw new Error("Données d'échéance invalides");
   }
 }
 
@@ -183,7 +200,7 @@ export async function deverrouillerStockage(motDePasse: string): Promise<void> {
   const vault = await db.vault.get(VAULT_ID);
   if (!vault) throw new Error("Coffre chiffré introuvable");
   const { texte, cle } = await dechiffrerTexte(vault, motDePasse);
-  const donneesExistantes = deserialiser(texte);
+  const donneesExistantes = deserialiser(texte, false);
   const data = normaliserMontantsEcheances(donneesExistantes);
   session = { mode: "encrypted", data, cle, chiffrement: vault };
   if (data !== donneesExistantes) await enregistrerPortefeuille(data);
@@ -211,7 +228,6 @@ export async function enregistrerPortefeuille(data: PortfolioData): Promise<void
     );
     const vault: EncryptedVault = { id: VAULT_ID, formatVersion: 1, ...chiffrement };
     await db.vault.put(vault);
-    await deserialiser(await dechiffrerAvecCle(vault, session.cle));
     await effacerTablesClaires();
     session.chiffrement = vault;
   }
@@ -230,7 +246,6 @@ export async function activerChiffrement(motDePasse: string): Promise<void> {
   if (!session || session.mode !== "plain") throw new Error("La base n'est pas en mode clair");
   const { vault, cle } = await creerVault(session.data, motDePasse);
   await db.vault.put(vault);
-  await deserialiser(await dechiffrerAvecCle(vault, cle));
   await effacerTablesClaires();
   session = { mode: "encrypted", data: session.data, cle, chiffrement: vault };
   setStorageMode("encrypted");
@@ -252,7 +267,6 @@ export async function changerMotDePasseChiffrement(ancien: string, nouveau: stri
   if (!session) throw new Error("Impossible de déverrouiller le coffre");
   const { vault, cle } = await creerVault(session.data, nouveau);
   await db.vault.put(vault);
-  await deserialiser(await dechiffrerAvecCle(vault, cle));
   session = { mode: "encrypted", data: session.data, cle, chiffrement: vault };
 }
 
@@ -314,7 +328,6 @@ export async function importerJson(texte: string, motDePasse?: string): Promise<
     );
     const vault: EncryptedVault = { id: VAULT_ID, formatVersion: 1, ...chiffrement };
     await db.vault.put(vault);
-    await deserialiser(await dechiffrerAvecCle(vault, session.cle));
     await effacerTablesClaires();
     session.chiffrement = vault;
   }

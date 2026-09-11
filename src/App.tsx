@@ -46,7 +46,7 @@ export default function App() {
   const [storageMode, setStorageMode] = useState<StorageMode>(getStorageMode);
   const [stockagePret, setStockagePret] = useState(false);
   const [notificationsActives, setNotificationsActives] = useState(
-    () => notificationsDisponibles() && notificationsEcheancesActivees() && Notification.permission !== "denied",
+    () => notificationsDisponibles() && notificationsEcheancesActivees() && Notification.permission === "granted",
   );
 
   useEffect(() => {
@@ -238,7 +238,7 @@ export default function App() {
             />
             <Route
               path="/deals"
-              element={<EcranListe />}
+              element={<EcranListe suiviEncaissements={suiviEncaissementsActif} />}
             />
             <Route path="/echeances" element={<EcheancesPage suiviEncaissementsActif={suiviEncaissementsActif} />} />
             <Route
@@ -280,10 +280,11 @@ export default function App() {
   );
 }
 
-function EcranListe() {
+function EcranListe({ suiviEncaissements }: { suiviEncaissements: boolean }) {
   const navigate = useNavigate();
   return (
     <DealList
+      suiviEncaissements={suiviEncaissements}
       onSelectDeal={(dealId, etatRetour: DealListViewState) =>
         navigate(`/deal/${dealId}`, { state: { retourDeals: etatRetour } })
       }

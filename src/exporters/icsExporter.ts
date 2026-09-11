@@ -11,11 +11,31 @@ function formatTimestampIcs(date: Date): string {
   return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 }
 
+function echapperTexteIcs(valeur: string): string {
+  return valeur.replace(/\\/g, "\\\\").replace(/([;,])/g, "\\$1").replace(/\r?\n/g, "\\n");
+}
+
+function replierLigneIcs(ligne: string): string {
+  const morceaux: string[] = [];
+  let courant = "";
+  for (const caractere of ligne) {
+    const octets = new TextEncoder().encode(courant + caractere).length;
+    if (courant && octets > 75) {
+      morceaux.push(courant);
+      courant = " " + caractere;
+    } else {
+      courant += caractere;
+    }
+  }
+  if (courant) morceaux.push(courant);
+  return morceaux.join("\r\n");
+}
+
 function genererEvenement(deal: Deal, echeance: Echeance): string {
   const dtstart = formatDateIcs(echeance.date);
   const uid = `${echeance.id}@clubdeal-app`;
   const maintenant = formatTimestampIcs(new Date());
-  const titre = `Interets ${deal.nom} - ${echeance.montant.toFixed(2)}EUR`;
+  const titre = echapperTexteIcs(`Interets ${deal.nom} - ${echeance.montant.toFixed(2)}EUR`);
 
   return [
     "BEGIN:VEVENT",
@@ -29,7 +49,7 @@ function genererEvenement(deal: Deal, echeance: Echeance): string {
     "TRIGGER:-P1D",
     "END:VALARM",
     "END:VEVENT",
-  ].join("\r\n");
+  ].map(replierLigneIcs).join("\r\n");
 }
 
 export function genererIcs(deal: Deal, echeances: Echeance[]): string {

@@ -56,6 +56,7 @@ export function DealDetail({
   const [onglet, setOnglet] = useState<Onglet>("echeances");
   const [confirmationSuppression, setConfirmationSuppression] = useState(false);
   const [confirmationAnnulation, setConfirmationAnnulation] = useState(false);
+  const [erreurSuppression, setErreurSuppression] = useState<string | null>(null);
 
   if (!dealInfo) {
     return <div className="p-4 text-center text-gray-500">Deal introuvable</div>;
@@ -64,9 +65,13 @@ export function DealDetail({
   const { deal, statut } = dealInfo;
 
   async function gererSuppression() {
-    await supprimer(dealId);
-    setConfirmationSuppression(false);
-    onRetour();
+    try {
+      await supprimer(dealId);
+      setConfirmationSuppression(false);
+      onRetour();
+    } catch (error) {
+      setErreurSuppression(error instanceof Error ? error.message : "Suppression impossible");
+    }
   }
 
   async function pointerEcheance(echeanceId: string) {
@@ -144,6 +149,7 @@ export function DealDetail({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            {erreurSuppression && <p role="alert" className="text-sm text-red-600">{erreurSuppression}</p>}
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={gererSuppression} className="bg-red-600 text-white">
               Supprimer

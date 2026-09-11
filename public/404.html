@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      const currentLocation = window.location;
+      const base = currentLocation.pathname.split("/").slice(0, 2).join("/") + "/";
+      const path = currentLocation.pathname.slice(base.length);
+      currentLocation.replace(base + "?/" + path + (currentLocation.search ? "&" + currentLocation.search.slice(1) : "") + currentLocation.hash);
+    </script>
+  </head>
+  <body></body>
+</html>
