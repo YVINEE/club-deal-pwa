@@ -87,6 +87,14 @@ describe("calculerSyntheseDashboard", () => {
       totalFinal: 10500,
     });
   });
+
+  it("ne compte pas deux fois un capital réinvesti dans le dashboard global", () => {
+    const source = deal(10000, "2025-01-01");
+    const destination = deal(6000, "2026-02-01");
+    destination.deal.reinvestissement = { sourceDealId: source.deal.id, montant: 4000 };
+
+    expect(calculerSyntheseDashboard([source, destination], new Date("2026-03-01"), { capitalEngageNet: true }).totalInvesti).toBe(12000);
+  });
 });
 
 describe("filtrerPointsCourbe", () => {

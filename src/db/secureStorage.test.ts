@@ -34,4 +34,19 @@ describe("validation des imports", () => {
   it("tolère une ancienne durée hors des nouvelles bornes au déverrouillage", () => {
     expect(() => validerDonnees({ ...donneesValides, deals: [{ ...donneesValides.deals[0], dureeInitiale: 1201 }] }, { strict: false })).not.toThrow();
   });
+
+  it("valide les réinvestissements dans un import quel que soit l'ordre des entrées", () => {
+    const debutSource = new Date();
+    debutSource.setFullYear(debutSource.getFullYear() - 2);
+    const source = { ...donneesValides.deals[0], id: "source", dateDebut: debutSource, dureeInitiale: 12 };
+    const destination = {
+      ...donneesValides.deals[0],
+      id: "destination",
+      dateDebut: new Date(),
+      montant: 5000,
+      reinvestissement: { sourceDealId: source.id, montant: 5000 },
+    };
+    expect(() => validerDonnees({ deals: [destination, source], prolongations: [], echeances: [] })).not.toThrow();
+    expect(() => validerDonnees({ deals: [{ ...destination, montant: 4999 }, source], prolongations: [], echeances: [] })).toThrow();
+  });
 });

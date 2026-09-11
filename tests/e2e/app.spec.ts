@@ -377,3 +377,26 @@ test("filtre les échéances à venir", async ({ page }) => {
   await deadlineFilters.getByRole("button", { name: /^Encaissées/ }).click();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toBeVisible();
 });
+
+test("crée un deal par réinvestissement et affiche son origine", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page, "Deal source", oldStartDate);
+
+  await page.getByRole("button", { name: "Ajouter un deal" }).click();
+  const fields = page.locator("form input");
+  await fields.nth(0).fill("Deal réinvesti");
+  await fields.nth(1).fill(dateInputDansMois(1));
+  await fields.nth(2).fill("6000");
+  await fields.nth(3).fill("12");
+  await fields.nth(4).fill("12");
+  await fields.nth(5).fill("0");
+  await page.getByText("Réinvestir depuis un deal terminé", { exact: true }).locator("..").getByRole("combobox").first().click();
+  await page.getByRole("option", { name: /Deal source/ }).click();
+  await expect(page.locator("form input").nth(3)).toHaveValue("6000");
+  await page.getByRole("button", { name: "Créer", exact: true }).click();
+
+  await expect(page.getByText(/Réinvesti depuis Deal source/)).toBeVisible();
+  await page.getByRole("heading", { name: "Deal réinvesti", exact: true }).click();
+  await expect(page.getByText(/Capital réinvesti depuis Deal source/)).toBeVisible();
+});

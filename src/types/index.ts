@@ -2,6 +2,11 @@ export type Frequence = "trimestriel" | "semestriel";
 
 export type StatutDeal = "actif" | "enProlongation" | "termine";
 
+export interface Reinvestissement {
+  sourceDealId: string;
+  montant: number;
+}
+
 export interface Deal {
   id: string;
   nom: string;
@@ -14,6 +19,7 @@ export interface Deal {
   dureeProlongationMois: number;
   appliquerEvolutionFiscale?: boolean;
   montantCouponApresEvolutionFiscale?: number;
+  reinvestissement?: Reinvestissement;
 }
 
 export interface Prolongation {

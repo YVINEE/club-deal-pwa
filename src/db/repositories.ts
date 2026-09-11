@@ -1,6 +1,7 @@
 import { Deal, Echeance, Prolongation } from "../types";
 import { genererEcheances, creerProlongation } from "../utils/calculs";
 import { dateFinCourante } from "../utils/statusUtils";
+import { validerReinvestissements } from "../utils/reinvestissements";
 import { enregistrerPortefeuille, lirePortefeuille } from "./secureStorage";
 
 async function recalculerEcheances(dealId: string): Promise<void> {
@@ -27,24 +28,33 @@ async function recalculerEcheances(dealId: string): Promise<void> {
 
 export async function ajouterDeal(deal: Deal): Promise<void> {
   const data = await lirePortefeuille();
-  data.deals.push(deal);
-  await enregistrerPortefeuille(data);
+  const donnees = { ...data, deals: [...data.deals, deal] };
+  validerReinvestissements(donnees.deals, donnees.prolongations);
+  await enregistrerPortefeuille(donnees);
   await recalculerEcheances(deal.id);
 }
 
 export async function modifierDeal(deal: Deal): Promise<void> {
   const data = await lirePortefeuille();
-  data.deals = data.deals.map((candidate) => (candidate.id === deal.id ? deal : candidate));
-  await enregistrerPortefeuille(data);
+  const donnees = { ...data, deals: data.deals.map((candidate) => (candidate.id === deal.id ? deal : candidate)) };
+  validerReinvestissements(donnees.deals, donnees.prolongations);
+  await enregistrerPortefeuille(donnees);
   await recalculerEcheances(deal.id);
 }
 
 export async function supprimerDeal(dealId: string): Promise<void> {
   const data = await lirePortefeuille();
-  data.deals = data.deals.filter((deal) => deal.id !== dealId);
-  data.prolongations = data.prolongations.filter((prolongation) => prolongation.dealId !== dealId);
-  data.echeances = data.echeances.filter((echeance) => echeance.dealId !== dealId);
-  await enregistrerPortefeuille(data);
+  if (data.deals.some((deal) => deal.reinvestissement?.sourceDealId === dealId)) {
+    throw new Error("Ce deal ne peut pas être supprimé tant que des réinvestissements en dépendent");
+  }
+  const donnees = {
+    ...data,
+    deals: data.deals.filter((deal) => deal.id !== dealId),
+    prolongations: data.prolongations.filter((prolongation) => prolongation.dealId !== dealId),
+    echeances: data.echeances.filter((echeance) => echeance.dealId !== dealId),
+  };
+  validerReinvestissements(donnees.deals, donnees.prolongations);
+  await enregistrerPortefeuille(donnees);
 }
 
 export async function prolongerDeal(dealId: string): Promise<void> {

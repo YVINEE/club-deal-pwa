@@ -1,5 +1,6 @@
 import { Deal, Echeance, StatutDeal } from "../types";
 import { calculerTauxNetEffectif } from "./calculs";
+import { calculerCapitalEngageNet } from "./reinvestissements";
 
 export interface DashboardDeal {
   deal: Deal;
@@ -35,9 +36,10 @@ function arrondirMontant(montant: number): number {
 export function calculerSyntheseDashboard(
   deals: DashboardDeal[],
   maintenant: Date = new Date(),
-  options: { suiviEncaissements?: boolean } = {}
+  options: { suiviEncaissements?: boolean; capitalEngageNet?: boolean } = {}
 ): SyntheseDashboard {
   const suiviEncaissements = options.suiviEncaissements === true;
+  const capitalEngageNet = options.capitalEngageNet === true;
   const echeances = deals.flatMap(({ echeances: dealEcheances }) => dealEcheances);
   const interetsAcquis = echeances
     .filter((echeance) => (suiviEncaissements ? echeance.encaissee : echeance.date <= maintenant))
@@ -45,12 +47,14 @@ export function calculerSyntheseDashboard(
   const interetsFuturs = echeances
     .filter((echeance) => (suiviEncaissements ? !echeance.encaissee : echeance.date > maintenant))
     .reduce((total, echeance) => total + echeance.montant, 0);
-  const totalInvesti = deals.reduce((total, { deal }) => total + deal.montant, 0);
+  const totalInvesti = capitalEngageNet
+    ? calculerCapitalEngageNet(deals.map(({ deal }) => deal))
+    : deals.reduce((total, { deal }) => total + deal.montant, 0);
   const rendementMoyenPondere =
     totalInvesti === 0
       ? 0
       : deals.reduce(
-          (total, { deal }) => total + deal.montant * calculerTauxNetEffectif(
+          (total, { deal }) => total + (capitalEngageNet ? deal.montant - (deal.reinvestissement?.montant ?? 0) : deal.montant) * calculerTauxNetEffectif(
             deal.rendementAnnuel,
             deal.dateDebut,
             maintenant,
@@ -81,11 +85,12 @@ export function calculerSyntheseDashboard(
 export function creerPointsCourbe(
   deals: DashboardDeal[],
   maintenant: Date = new Date(),
-  options: { suiviEncaissements?: boolean } = {}
+  options: { suiviEncaissements?: boolean; capitalEngageNet?: boolean } = {}
 ): PointCourbe[] {
   const suiviEncaissements = options.suiviEncaissements === true;
+  const capitalEngageNet = options.capitalEngageNet === true;
   const evenements = deals.flatMap(({ deal, echeances }) => [
-    { date: deal.dateDebut, variation: deal.montant, projection: false },
+    { date: deal.dateDebut, variation: capitalEngageNet ? deal.montant - (deal.reinvestissement?.montant ?? 0) : deal.montant, projection: false },
     ...echeances.map((echeance) => ({
       date: echeance.date,
       variation: echeance.montant,

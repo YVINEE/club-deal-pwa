@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useDeals } from "../hooks/useDeals";
 import { DealCard } from "./DealCard";
 import { Plus } from "lucide-react";
+import { calculerCapitalEngageNet } from "../utils/reinvestissements";
 
 interface DealListProps {
   onSelectDeal: (dealId: string, etatRetour: DealListViewState) => void;
@@ -59,7 +60,7 @@ export function DealList({
   });
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine");
   const dealsEnProlongation = deals.filter(({ statut }) => statut === "enProlongation");
-  const totalEngage = dealsActifs.reduce((total, { deal }) => total + deal.montant, 0);
+  const totalEngage = calculerCapitalEngageNet(deals.map(({ deal }) => deal));
   const dealsFiltres = dealsTries.filter(({ statut }) => {
     if (filtre === "actifs") return statut === "actif";
     if (filtre === "prolongation") return statut === "enProlongation";
@@ -186,6 +187,7 @@ export function DealList({
               dateFin={dateFin}
               prochaineEcheanceDate={prochaineEcheanceDate}
               prochaineEcheanceMontant={prochaineEcheanceMontant}
+              sourceDealName={deal.reinvestissement ? deals.find((candidate) => candidate.deal.id === deal.reinvestissement?.sourceDealId)?.deal.nom : undefined}
               onClick={() => onSelectDeal(deal.id, etatVue(deal.id))}
             />
           ))}

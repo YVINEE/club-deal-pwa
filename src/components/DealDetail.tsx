@@ -63,6 +63,9 @@ export function DealDetail({
   }
 
   const { deal, statut } = dealInfo;
+  const sourceDealName = deal.reinvestissement
+    ? deals.find((candidate) => candidate.deal.id === deal.reinvestissement?.sourceDealId)?.deal.nom
+    : undefined;
 
   async function gererSuppression() {
     try {
@@ -102,7 +105,7 @@ export function DealDetail({
       </div>
 
       <div className="p-4 border-b border-border">
-        {synthese && <ValeurActuelle deal={deal} synthese={synthese} />}
+        {synthese && <ValeurActuelle deal={deal} synthese={synthese} sourceDealName={sourceDealName} />}
       </div>
 
       <div className="p-4">
@@ -203,9 +206,11 @@ function ResumeFinancier({
 function ValeurActuelle({
   deal,
   synthese,
+  sourceDealName,
 }: {
   deal: Deal;
   synthese: ReturnType<typeof calculerSyntheseDashboard>;
+  sourceDealName?: string;
 }) {
   return (
     <section aria-label="Valeur actuelle du deal" className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/5 dark:bg-black/10">
@@ -217,6 +222,11 @@ function ValeurActuelle({
       <div className="mt-1 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
         Rendement net : {formatPourcentage(deal.rendementAnnuel)} / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
+      {deal.reinvestissement && (
+        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Capital réinvesti depuis {sourceDealName ?? "un deal terminé"} : {formatMontant(deal.reinvestissement.montant)}
+        </div>
+      )}
       {deal.appliquerEvolutionFiscale === true && dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
         <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Coupons ajustés depuis le 1er janvier 2026

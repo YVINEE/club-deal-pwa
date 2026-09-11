@@ -6,11 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { calculerCouponPourDate, DATE_CHANGEMENT_FISCALITE, dealEligibleEvolutionFiscale, MAX_DUREE_MOIS } from "../utils/calculs";
 import { addMonths, formatDateInput, frequenceEnMois, parseDateInput } from "../utils/dateUtils";
+import { arrondirCentimes } from "../utils/reinvestissements";
+
+export interface SourceReinvestissement {
+  id: string;
+  nom: string;
+  disponible: number;
+  dateFin: Date;
+}
 
 interface DealFormProps {
   dealExistant?: Deal;
   onSubmit: (deal: Deal) => Promise<void>;
   onAnnuler: () => void;
+  sourcesDisponibles?: SourceReinvestissement[];
 }
 
 interface FormState {
@@ -24,6 +33,8 @@ interface FormState {
   dureeProlongationMois: string;
   appliquerEvolutionFiscale: boolean;
   montantCouponApresEvolutionFiscale: string;
+  sourceDealId: string;
+  montantReinvesti: string;
 }
 
 function dealVersFormState(deal?: Deal): FormState {
@@ -40,15 +51,18 @@ function dealVersFormState(deal?: Deal): FormState {
     montantCouponApresEvolutionFiscale: deal?.montantCouponApresEvolutionFiscale !== undefined
       ? String(deal.montantCouponApresEvolutionFiscale)
       : "",
+    sourceDealId: deal?.reinvestissement?.sourceDealId ?? "",
+    montantReinvesti: deal?.reinvestissement ? String(deal.reinvestissement.montant) : "",
   };
 }
 
-export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
+export function DealForm({ dealExistant, onSubmit, onAnnuler, sourcesDisponibles = [] }: DealFormProps) {
   const [form, setForm] = useState<FormState>(dealVersFormState(dealExistant));
   const [erreurs, setErreurs] = useState<Partial<Record<keyof FormState, string>>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [erreurSoumission, setErreurSoumission] = useState<string | null>(null);
   const initialisationRef = useRef(true);
+  const montantReinvestiAutoRef = useRef(false);
   const dateDebut = form.dateDebut ? parseDateInput(form.dateDebut) : null;
   const evolutionFiscaleEligible = dateDebut && Number(form.dureeInitiale) > 0
     ? dealEligibleEvolutionFiscale(dateDebut, Number(form.dureeInitiale))
@@ -77,6 +91,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
 
   useEffect(() => {
     initialisationRef.current = true;
+    montantReinvestiAutoRef.current = false;
     setForm(dealVersFormState(dealExistant));
   }, [dealExistant]);
 
@@ -113,6 +128,40 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
     setErreurs((e) => ({ ...e, [champ]: undefined }));
   }
 
+  function majMontant(valeur: string) {
+    setForm((f) => {
+      const montant = Number(valeur);
+      const source = sourcesDisponibles.find((item) => item.id === f.sourceDealId);
+      const limite = source && Number.isFinite(montant) && montant > 0
+        ? Math.min(montant, source.disponible)
+        : null;
+      const montantReinvesti = limite !== null && (montantReinvestiAutoRef.current || !f.montantReinvesti || Number(f.montantReinvesti) > limite)
+        ? String(limite)
+        : f.montantReinvesti;
+      return { ...f, montant: valeur, montantReinvesti };
+    });
+    setErreurs((e) => ({ ...e, montant: undefined, montantReinvesti: undefined }));
+  }
+
+  function selectionnerSource(sourceDealId: string) {
+    const source = sourcesDisponibles.find((item) => item.id === sourceDealId);
+    const montant = Number(form.montant);
+    montantReinvestiAutoRef.current = Boolean(source);
+    setForm((f) => ({
+      ...f,
+      sourceDealId,
+      montantReinvesti: source && Number.isFinite(montant) && montant > 0
+        ? String(Math.min(montant, source.disponible))
+        : "",
+    }));
+    setErreurs((e) => ({ ...e, sourceDealId: undefined, montantReinvesti: undefined }));
+  }
+
+  function majMontantReinvesti(valeur: string) {
+    montantReinvestiAutoRef.current = false;
+    majChamp("montantReinvesti", valeur);
+  }
+
   function valider(): boolean {
     const nouvellesErreurs: Partial<Record<keyof FormState, string>> = {};
     if (!form.nom.trim()) nouvellesErreurs.nom = "Le nom est requis";
@@ -138,6 +187,19 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
     ) {
       nouvellesErreurs.montantCouponApresEvolutionFiscale = "Montant de coupon invalide";
     }
+    if (!dealExistant && form.sourceDealId) {
+      const source = sourcesDisponibles.find((item) => item.id === form.sourceDealId);
+      const montantReinvesti = Number(form.montantReinvesti);
+      if (!source) nouvellesErreurs.sourceDealId = "Deal source invalide";
+      if (source && dateDebut && dateDebut < source.dateFin) {
+        nouvellesErreurs.dateDebut = "La date de début doit suivre la fin du deal source";
+      }
+      if (!form.montantReinvesti || !Number.isFinite(montantReinvesti) || montantReinvesti <= 0) {
+        nouvellesErreurs.montantReinvesti = "Montant réinvesti invalide";
+      } else if (source && montantReinvesti > Math.min(Number(form.montant), source.disponible) + 0.000001) {
+        nouvellesErreurs.montantReinvesti = "Le montant dépasse le capital disponible";
+      }
+    }
     setErreurs(nouvellesErreurs);
     return Object.keys(nouvellesErreurs).length === 0;
   }
@@ -151,7 +213,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         id: dealExistant?.id ?? crypto.randomUUID(),
         nom: form.nom.trim(),
         dateDebut: parseDateInput(form.dateDebut),
-        montant: Number(form.montant),
+        montant: arrondirCentimes(Number(form.montant)),
         rendementAnnuel: Number(form.rendementAnnuel),
         frequence: form.frequence,
         dureeInitiale: Number(form.dureeInitiale),
@@ -161,6 +223,9 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
         montantCouponApresEvolutionFiscale: evolutionFiscaleEligible && form.appliquerEvolutionFiscale
           ? Number(form.montantCouponApresEvolutionFiscale)
           : undefined,
+        reinvestissement: dealExistant?.reinvestissement ?? (!dealExistant && form.sourceDealId
+          ? { sourceDealId: form.sourceDealId, montant: arrondirCentimes(Number(form.montantReinvesti)) }
+          : undefined),
       };
       setErreurSoumission(null);
       await onSubmit(deal);
@@ -200,10 +265,53 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler }: DealFormProps) {
           min="0"
           step="0.01"
           value={form.montant}
-          onChange={(e) => majChamp("montant", e.target.value)}
+          onChange={(e) => majMontant(e.target.value)}
           className="h-12 text-base"
         />
       </Champ>
+
+      {!dealExistant && sourcesDisponibles.some((source) => source.disponible > 0) && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
+          <Champ label="Réinvestir depuis un deal terminé" erreur={erreurs.sourceDealId}>
+            <Select value={form.sourceDealId || "aucun"} onValueChange={(value) => selectionnerSource(value === "aucun" ? "" : value)}>
+              <SelectTrigger className="h-12 text-base">
+                <SelectValue placeholder="Aucun réinvestissement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aucun">Aucun réinvestissement</SelectItem>
+                {sourcesDisponibles.filter((source) => source.disponible > 0).map((source) => (
+                  <SelectItem key={source.id} value={source.id}>
+                    {source.nom} · {source.disponible.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} € disponibles
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Champ>
+          {form.sourceDealId && (
+            <Champ label="Montant réinvesti (€)" erreur={erreurs.montantReinvesti}>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                step="0.01"
+                max={sourcesDisponibles.find((source) => source.id === form.sourceDealId)?.disponible}
+                value={form.montantReinvesti}
+                onChange={(e) => majMontantReinvesti(e.target.value)}
+                className="h-12 text-base"
+              />
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Capital disponible : {sourcesDisponibles.find((source) => source.id === form.sourceDealId)?.disponible.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+              </span>
+            </Champ>
+          )}
+        </div>
+      )}
+
+      {dealExistant?.reinvestissement && (
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Réinvesti depuis {sourcesDisponibles.find((source) => source.id === dealExistant.reinvestissement?.sourceDealId)?.nom ?? "un deal existant"} : {dealExistant.reinvestissement.montant.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+        </p>
+      )}
 
       <Champ label="Rendement annuel (%)" erreur={erreurs.rendementAnnuel}>
         <Input

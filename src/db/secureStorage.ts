@@ -8,6 +8,7 @@ import {
   motDePasseValide,
 } from "../utils/crypto";
 import { calculerCouponPourDate, MAX_DUREE_MOIS } from "../utils/calculs";
+import { validerReinvestissements } from "../utils/reinvestissements";
 
 const MODE_KEY = "club-deal-storage-mode";
 const VAULT_ID = "current";
@@ -22,7 +23,7 @@ export interface PortfolioData {
 
 interface JsonExportClair {
   format: "club-deal-pwa";
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   encrypted: false;
   data: PortfolioData;
@@ -30,7 +31,7 @@ interface JsonExportClair {
 
 interface JsonExportChiffre {
   format: "club-deal-pwa";
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   encrypted: true;
   encryption: Chiffrement;
@@ -180,6 +181,7 @@ export function validerDonnees(data: PortfolioData, options: { strict?: boolean 
   )) {
     throw new Error("Données d'échéance invalides");
   }
+  validerReinvestissements(data.deals, data.prolongations);
 }
 
 export async function ouvrirStockage(mode: StorageMode): Promise<void> {
@@ -276,7 +278,7 @@ export async function exporterJson(): Promise<string> {
   if (session.mode === "plain") {
     const exportClair: JsonExportClair = {
       format: "club-deal-pwa",
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       encrypted: false,
       data: session.data,
@@ -293,7 +295,7 @@ export async function exporterJson(): Promise<string> {
   );
   const exportChiffre: JsonExportChiffre = {
     format: "club-deal-pwa",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     encrypted: true,
     encryption,
@@ -304,7 +306,7 @@ export async function exporterJson(): Promise<string> {
 export async function importerJson(texte: string, motDePasse?: string): Promise<void> {
   if (!session) throw new Error("Le stockage local est verrouillé");
   const contenu = JSON.parse(texte) as JsonExportClair | JsonExportChiffre;
-  if (contenu.format !== "club-deal-pwa" || contenu.version !== 1) {
+  if (contenu.format !== "club-deal-pwa" || (contenu.version !== 1 && contenu.version !== 2)) {
     throw new Error("Format JSON non reconnu");
   }
 

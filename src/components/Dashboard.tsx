@@ -33,7 +33,7 @@ function pourcentage(value: number): string {
 
 export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMode }: DashboardProps) {
   const synthese = useMemo(
-    () => calculerSyntheseDashboard(deals, new Date(), { suiviEncaissements: suiviEncaissementsActif }),
+    () => calculerSyntheseDashboard(deals, new Date(), { suiviEncaissements: suiviEncaissementsActif, capitalEngageNet: true }),
     [deals, suiviEncaissementsActif],
   );
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine").length;
@@ -72,7 +72,7 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Indicateur label="Capital investi" valeur={montant(synthese.totalInvesti)} />
+        <Indicateur label="Capital engagé net" valeur={montant(synthese.totalInvesti)} />
         <Indicateur label="Gains acquis" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-700 dark:text-emerald-300" />
         <Indicateur label="Gains futurs" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-700 dark:text-emerald-300" />
         <Indicateur label="Total final prévu" valeur={montant(synthese.totalFinal)} couleur="text-purple-700 dark:text-purple-300" />

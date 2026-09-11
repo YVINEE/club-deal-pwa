@@ -10,6 +10,7 @@ interface DealCardProps {
   dateFin: Date;
   prochaineEcheanceDate?: Date;
   prochaineEcheanceMontant?: number;
+  sourceDealName?: string;
   onClick: () => void;
   id?: string;
 }
@@ -26,6 +27,7 @@ export function DealCard({
   dateFin,
   prochaineEcheanceDate,
   prochaineEcheanceMontant,
+  sourceDealName,
   onClick,
   id,
 }: DealCardProps) {
@@ -69,6 +71,11 @@ export function DealCard({
       <div className="text-sm text-gray-500 mb-3">
         {deal.montant.toLocaleString("fr-FR")} € — {deal.rendementAnnuel}% net / an · {deal.frequence === "trimestriel" ? "Trimestriel" : "Semestriel"}
       </div>
+      {deal.reinvestissement && (
+        <div className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+          Réinvesti depuis {sourceDealName ?? "un deal terminé"} · {deal.reinvestissement.montant.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+        </div>
+      )}
       {deal.appliquerEvolutionFiscale === true && dealCommenceAvantEvolutionFiscale(deal.dateDebut) && (
         <div className="mb-3 text-xs text-slate-500 dark:text-slate-400">
           Coupons ajustés depuis le 1er janvier 2026

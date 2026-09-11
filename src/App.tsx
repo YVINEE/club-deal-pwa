@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDeals } from "./hooks/useDeals";
 import { DealList, DealsNavigationState, DealListViewState } from "./components/DealList";
 import { DealDetail } from "./components/DealDetail";
-import { DealForm } from "./components/DealForm";
+import { DealForm, SourceReinvestissement } from "./components/DealForm";
 import { Deal } from "./types";
 import { EncryptionLockScreen } from "./components/EncryptionLockScreen";
 import { MainLayout } from "./components/MainLayout";
@@ -30,6 +30,7 @@ import {
   notificationsEcheancesActivees,
   notifierEcheancesDuJour,
 } from "./utils/notifications";
+import { capitauxDisponibles } from "./utils/reinvestissements";
 
 type Theme = "light" | "dark";
 const DUREE_VERROUILLAGE_MS = 60_000;
@@ -326,6 +327,17 @@ function EcranFormulaire() {
   const { deals, creer, modifier } = useDeals();
 
   const dealExistant = dealId ? deals.find((d) => d.deal.id === dealId)?.deal : undefined;
+  const sourcesDisponibles = useMemo<SourceReinvestissement[]>(() => {
+    const disponibles = capitauxDisponibles(deals.map(({ deal }) => deal));
+    return deals
+      .filter(({ statut }) => statut === "termine")
+      .map(({ deal, dateFin }) => ({
+        id: deal.id,
+        nom: deal.nom,
+        disponible: disponibles.get(deal.id) ?? 0,
+        dateFin,
+      }));
+  }, [deals]);
 
   async function gererSoumission(deal: Deal) {
     if (dealExistant) {
@@ -340,6 +352,7 @@ function EcranFormulaire() {
   return (
     <DealForm
       dealExistant={dealExistant}
+      sourcesDisponibles={sourcesDisponibles}
       onSubmit={gererSoumission}
       onAnnuler={() => navigate("/deals", { state: navigationState })}
     />
