@@ -6,7 +6,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 
 ## Fonctionnalités
 
-- Tableau de bord avec valeur actuelle, gains acquis, gains futurs et total final prévu.
+- Tableau de bord avec indicateurs globaux (valeur actuelle, capital engagé, capital récupéré, apports externes nets, gains acquis, gains futurs, total final prévu) et un détail par année, du 1er janvier au 31 décembre.
 - Liste des deals triée par défaut par date de fin (tri par prochaine échéance, montant investi ou date de fin au choix).
 - Création, modification et suppression de deals.
 - Rendements trimestriels ou semestriels et calcul automatique des coupons.
@@ -14,7 +14,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 - Filtres de la liste des deals : Actifs (par défaut), Terminés, Tous.
 - Liste des échéances filtrée par défaut sur « À pointer » s’il reste des coupons à pointer, sinon sur « À venir » ; toujours « À venir » si le pointage est désactivé.
 - Gestion des prolongations avec suivi de la maturité contractuelle.
-- Graphique de trajectoire du portefeuille avec vues « Tout » et « 1A ».
+- Graphique de trajectoire du portefeuille (historique complet) et un graphique par année, du 1er janvier au 31 décembre.
 - Export CSV et calendrier ICS depuis le détail d’un deal.
 - Export et import JSON pour sauvegarder ou restaurer les données locales.
 - Notifications locales le jour des échéances, activables dans les paramètres.
@@ -96,6 +96,8 @@ tests/e2e/                   # Parcours Playwright
 - Un deal peut être trimestriel ou semestriel.
 - Les échéances sont recalculées lorsque les paramètres financiers du deal sont modifiés.
 - Un deal arrivé à son terme devient terminé, sauf prolongation enregistrée (y compris après l’échéance).
+- À son terme, le capital d’un deal quitte le capital engagé et devient du capital récupéré (disponible), sauf la part réinvestie dans un nouveau deal.
+- Capital engagé = montants des deals non terminés ; capital récupéré = montants des deals terminés non réinvestis ; apports externes nets = montants − réinvestissements.
 - Le pointage des échéances est optionnel dans les paramètres.
 - Les notifications d’échéances sont désactivées par défaut et nécessitent l’autorisation du navigateur.
 - L’import JSON remplace les données locales existantes après confirmation.
