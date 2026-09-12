@@ -3,7 +3,7 @@ import { Bell, Database, Download, KeyRound, ListChecks, LockKeyhole, Upload } f
 import { StorageMode } from "../db/secureStorage";
 import { motDePasseValide } from "../utils/crypto";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { PasswordInput } from "./ui/password-input";
 
 type ActionChiffrement = "activer" | "modifier" | "desactiver" | null;
 
@@ -178,8 +178,7 @@ export function SecuritySettings({
 
         {actionChiffrement && (
           <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete={actionChiffrement === "activer" ? "new-password" : "current-password"}
               placeholder={actionChiffrement === "activer" ? "Mot de passe" : "Mot de passe actuel"}
               value={motDePasse}
@@ -187,8 +186,7 @@ export function SecuritySettings({
               aria-label={actionChiffrement === "activer" ? "Mot de passe" : "Mot de passe actuel"}
             />
             {actionChiffrement === "activer" && (
-              <Input
-                type="password"
+              <PasswordInput
                 autoComplete="new-password"
                 placeholder="Confirmer le mot de passe"
                 value={confirmationMotDePasse}
@@ -198,16 +196,14 @@ export function SecuritySettings({
             )}
             {actionChiffrement === "modifier" && (
               <>
-                <Input
-                  type="password"
+                <PasswordInput
                   autoComplete="new-password"
                   placeholder="Nouveau mot de passe"
                   value={nouveauMotDePasse}
                   onChange={(event) => setNouveauMotDePasse(event.target.value)}
                   aria-label="Nouveau mot de passe"
                 />
-                <Input
-                  type="password"
+                <PasswordInput
                   autoComplete="new-password"
                   placeholder="Confirmer le nouveau mot de passe"
                   value={confirmationMotDePasse}

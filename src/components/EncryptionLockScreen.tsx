@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { PasswordInput } from "./ui/password-input";
 
 interface EncryptionLockScreenProps {
   onUnlock: (motDePasse: string) => Promise<boolean>;
@@ -28,8 +28,7 @@ export function EncryptionLockScreen({ onUnlock }: EncryptionLockScreenProps) {
       <form onSubmit={soumettre} className="w-full max-w-sm space-y-4 text-center">
         <h1 className="text-xl font-semibold">Application protégée</h1>
         <p className="text-sm text-gray-500">Saisissez votre mot de passe pour accéder aux données.</p>
-        <Input
-          type="password"
+        <PasswordInput
           autoFocus
           autoComplete="current-password"
           value={motDePasse}

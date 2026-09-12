@@ -339,6 +339,14 @@ test("active le chiffrement, recharge et déverrouille", async ({ page }) => {
   await page.getByRole("button", { name: "Mettre un mot de passe" }).click();
   await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-e2e");
   await page.getByLabel("Confirmer le mot de passe").fill("motdepasse-e2e");
+
+  const motDePasseActivation = page.getByLabel("Mot de passe", { exact: true });
+  await expect(motDePasseActivation).toHaveAttribute("type", "password");
+  await page.getByRole("button", { name: "Afficher le mot de passe" }).first().click();
+  await expect(motDePasseActivation).toHaveAttribute("type", "text");
+  await page.getByRole("button", { name: "Masquer le mot de passe" }).first().click();
+  await expect(motDePasseActivation).toHaveAttribute("type", "password");
+
   await page.getByRole("button", { name: "Mettre le mot de passe" }).click();
   await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
 
