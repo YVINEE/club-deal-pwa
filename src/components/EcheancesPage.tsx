@@ -93,21 +93,20 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
       <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-[#111827]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Échéancier de trésorerie</p>
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Total encaissé et à recevoir</p>
             <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">{formatMontant(totalEcheances)}</p>
-            <p className="mt-1 text-xs text-slate-500">Sur la période affichée</p>
           </div>
-          <div className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+          <div className="shrink-0 whitespace-nowrap rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium tabular-nums text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
             {nbAPointer} à pointer
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl bg-slate-100 p-3 dark:bg-white/5">
-            <div className="text-xs text-slate-500">Déjà encaissé</div>
+            <div className="uppercase text-xs text-slate-500">Déjà encaissé</div>
             <div className="mt-1 font-semibold text-emerald-700 dark:text-emerald-300">{formatMontant(totalEncaisse)}</div>
           </div>
           <div className="rounded-xl bg-slate-100 p-3 dark:bg-white/5">
-            <div className="text-xs text-slate-500">À recevoir</div>
+            <div className="uppercase text-xs text-slate-500">À recevoir</div>
             <div className="mt-1 font-semibold text-blue-700 dark:text-blue-300">{formatMontant(totalARecevoir)}</div>
           </div>
         </div>
