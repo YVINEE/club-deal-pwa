@@ -7,10 +7,12 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 ## Fonctionnalités
 
 - Tableau de bord avec valeur actuelle, gains acquis, gains futurs et total final prévu.
-- Liste des deals triée par prochaine échéance.
+- Liste des deals triée par défaut par date de fin (tri par prochaine échéance, montant investi ou date de fin au choix).
 - Création, modification et suppression de deals.
 - Rendements trimestriels ou semestriels et calcul automatique des coupons.
 - Suivi des échéances avec pointage et dépointage des encaissements.
+- Filtres de la liste des deals : Actifs (par défaut), Terminés, Tous.
+- Liste des échéances filtrée par défaut sur « À pointer » s’il reste des coupons à pointer, sinon sur « À venir » ; toujours « À venir » si le pointage est désactivé.
 - Gestion des prolongations avec suivi de la maturité contractuelle.
 - Graphique de trajectoire du portefeuille avec vues « Tout » et « 1A ».
 - Export CSV et calendrier ICS depuis le détail d’un deal.
@@ -21,7 +23,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 - Thème sombre par défaut et thème clair disponible dans les paramètres.
 - Navigation mobile par onglets : Vue, Deals, Échéances et Paramètres.
 
-> Les données sont conservées localement sur l’appareil. Il n’y a pas de serveur de synchronisation. En cas d’activation de la protection par mot de passe, celui-ci ne peut pas être récupéré par l’application.
+> Les données sont conservées localement sur l’appareil. Il n’y a pas de serveur de synchronisation. En cas d’activation de la protection par mot de passe, si vous oubliez votre mot de passe, celui-ci ne peut pas être récupéré par l’application. Pensez à faire des sauvegardes en JSON pour éviter de tout perdre.
 
 ## Technologies
 
@@ -97,6 +99,7 @@ tests/e2e/                   # Parcours Playwright
 - Le pointage des échéances est optionnel dans les paramètres.
 - Les notifications d’échéances sont désactivées par défaut et nécessitent l’autorisation du navigateur.
 - L’import JSON remplace les données locales existantes après confirmation.
+- Le filtre par défaut de la liste des échéances dépend du pointage : « À pointer » s’il reste des échéances à pointer, sinon « À venir » (et « À venir » si le pointage est désactivé).
 
 ## Sécurité et sauvegardes
 
@@ -110,4 +113,4 @@ Les notifications d’échéances sont optionnelles et s’activent depuis **Par
 - lorsque l’application redevient visible ou active ;
 - une seule fois par échéance et par jour.
 
-Le navigateur doit autoriser les notifications. Le clic sur une notification ouvre l’écran **Échéances**. Comme les données sont locales, une PWA complètement fermée ne garantit pas une notification en arrière-plan sur tous les appareils ; cette garantie nécessiterait un service Push et un serveur.
+Le navigateur doit autoriser les notifications. Le clic sur une notification ouvre l’écran **Échéances**. Comme les données sont locales, une PWA complètement fermée ne garantit pas une notification en arrière-plan sur tous les appareils ; cette garantie nécessiterait un service Push et un serveur. Pour des rappels fiables même application fermée, exportez le calendrier **ICS** d’un deal (onglet **Exporter** du détail) et importez-le dans votre application de calendrier : les rappels sont alors déclenchés par le calendrier lui-même.
