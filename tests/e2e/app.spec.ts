@@ -279,6 +279,29 @@ test("conserve la position après un pointage en bas de la liste des échéances
   expect(Math.abs(scrollApresDepointage - scrollApresPointage)).toBeLessThan(50);
 });
 
+test("conserve la position de la liste des échéances après un aller-retour au détail", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page, "Deal échéances 1", oldStartDate);
+  await fillDeal(page, "Deal échéances 2", oldStartDate);
+  await fillDeal(page, "Deal échéances 3", oldStartDate);
+  await openDeadlines(page);
+  await page.getByLabel("Filtrer les échéances").getByRole("button", { name: /^Toutes/ }).click();
+
+  const cible = page.getByText("Deal échéances 3", { exact: true }).last();
+  await cible.scrollIntoViewIfNeeded();
+  const scrollAvant = await page.evaluate(() => window.scrollY);
+  expect(scrollAvant).toBeGreaterThan(0);
+  await cible.click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/echeances$/);
+  await expect(cible).toBeInViewport();
+  const scrollApres = await page.evaluate(() => window.scrollY);
+  expect(scrollApres).toBeGreaterThan(0);
+  expect(Math.abs(scrollApres - scrollAvant)).toBeLessThan(50);
+});
+
 test("change de thème clair puis sombre", async ({ page }) => {
   await openApp(page);
   await openSettings(page);

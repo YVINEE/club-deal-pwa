@@ -4,12 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { annulerEcheanceEncaissee, marquerEcheanceEncaissee } from "../db/repositories";
 import { useToutesLesEcheances } from "../hooks/useToutesLesEcheances";
 import { formatDateFr } from "../utils/dateUtils";
+import {
+  effacerVueEcheances,
+  enregistrerVueEcheances,
+  lireVueEcheances,
+  type FiltreEcheances,
+} from "../utils/echeancesViewState";
 
 interface EcheancesPageProps {
   suiviEncaissementsActif: boolean;
 }
-
-type FiltreEcheances = "toutes" | "aPointer" | "aVenir" | "encaissees";
 
 function formatMontant(montant: number): string {
   return `${montant.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -18,10 +22,15 @@ function formatMontant(montant: number): string {
 export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [filtre, setFiltre] = useState<FiltreEcheances | null>(null);
-  const scrollARestaurer = useRef<number | null>(null);
+  const [vueInitiale] = useState(() => lireVueEcheances());
+  const [filtre, setFiltre] = useState<FiltreEcheances | null>(() => vueInitiale?.filtre ?? null);
+  const scrollARestaurer = useRef<number | null>(vueInitiale?.scrollY ?? null);
   const { echeances, loading } = useToutesLesEcheances(refreshKey);
   const maintenant = useMemo(() => new Date(), [refreshKey]);
+
+  useEffect(() => {
+    effacerVueEcheances();
+  }, []);
 
   const estEchue = (date: Date) => date.getTime() <= maintenant.getTime();
 
@@ -163,7 +172,10 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
                   <div className="flex items-start justify-between gap-3">
                     <button
                       type="button"
-                      onClick={() => navigate(`/deal/${echeance.dealId}`)}
+                      onClick={() => {
+                        enregistrerVueEcheances({ scrollY: window.scrollY, filtre });
+                        navigate(`/deal/${echeance.dealId}`);
+                      }}
                       className="min-w-0 text-left"
                     >
                       <div className="truncate font-semibold text-slate-900 dark:text-white">{echeance.nomDeal}</div>
