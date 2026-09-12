@@ -62,7 +62,7 @@ export function DealCard({
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold text-lg">{deal.nom}</h3>
-        <span className={"rounded-full px-2 py-1 text-xs font-medium " + badgeClasses}>
+        <span className={"shrink-0 whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium " + badgeClasses}>
           <span className={"mr-1 inline-block h-1.5 w-1.5 rounded-full " + badge.dot} aria-hidden="true" />
           {badge.label}
         </span>
