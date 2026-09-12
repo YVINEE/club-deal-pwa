@@ -183,9 +183,19 @@ export default function App() {
     try {
       const contenu = await file.text();
       const entete = JSON.parse(contenu) as { encrypted?: boolean };
-      if (!window.confirm("Remplacer toutes les données locales par ce fichier ?")) return;
-      const motDePasse = entete.encrypted ? window.prompt("Mot de passe du fichier JSON") ?? undefined : undefined;
-      await importerJson(contenu, motDePasse);
+      if (entete.encrypted) {
+        const message =
+          "Ce fichier est protégé par mot de passe. L'importer remplacera toutes les données locales et " +
+          "définira ce mot de passe comme mot de passe de l'application. Continuer ?";
+        if (!window.confirm(message)) return;
+        const motDePasse =
+          window.prompt("Mot de passe du fichier JSON (il deviendra le mot de passe de l'application)") ?? undefined;
+        if (!motDePasse) throw new Error("Mot de passe requis");
+        await importerJson(contenu, motDePasse);
+      } else {
+        if (!window.confirm("Remplacer toutes les données locales par ce fichier ?")) return;
+        await importerJson(contenu);
+      }
       window.location.reload();
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Import impossible");

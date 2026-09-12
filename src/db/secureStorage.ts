@@ -313,25 +313,34 @@ export async function importerJson(texte: string, motDePasse?: string): Promise<
   let data: PortfolioData;
   if (contenu.encrypted) {
     if (!motDePasse) throw new Error("Mot de passe requis pour cet export");
+    if (!motDePasseValide(motDePasse)) {
+      throw new Error("Le mot de passe du fichier doit contenir au moins 8 caractères");
+    }
     data = deserialiser((await dechiffrerTexte(contenu.encryption, motDePasse)).texte);
-  } else {
-    data = deserialiser(JSON.stringify(contenu.data));
-  }
 
-  if (session.mode === "plain") {
-    await ecrireTablesClaires(data);
-  } else {
-    if (!session.cle || !session.chiffrement) throw new Error("Clé de chiffrement indisponible");
-    const chiffrement = await chiffrerAvecCle(
-      serialiser(data),
-      session.cle,
-      session.chiffrement.salt,
-      session.chiffrement.iterations,
-    );
-    const vault: EncryptedVault = { id: VAULT_ID, formatVersion: 1, ...chiffrement };
+    // Le mot de passe du fichier fait foi : on recrée le coffre local avec ce mot de passe.
+    const { vault, cle } = await creerVault(data, motDePasse);
     await db.vault.put(vault);
     await effacerTablesClaires();
-    session.chiffrement = vault;
+    session = { mode: "encrypted", data, cle, chiffrement: vault };
+    setStorageMode("encrypted");
+  } else {
+    data = deserialiser(JSON.stringify(contenu.data));
+    if (session.mode === "plain") {
+      await ecrireTablesClaires(data);
+    } else {
+      if (!session.cle || !session.chiffrement) throw new Error("Clé de chiffrement indisponible");
+      const chiffrement = await chiffrerAvecCle(
+        serialiser(data),
+        session.cle,
+        session.chiffrement.salt,
+        session.chiffrement.iterations,
+      );
+      const vault: EncryptedVault = { id: VAULT_ID, formatVersion: 1, ...chiffrement };
+      await db.vault.put(vault);
+      await effacerTablesClaires();
+      session.chiffrement = vault;
+    }
   }
   session.data = data;
 }

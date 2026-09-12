@@ -396,6 +396,88 @@ test("exporte puis importe un JSON", async ({ page, browser }) => {
   }
 });
 
+test("importe un JSON chiffré et active le mot de passe du fichier", async ({ page, browser }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page);
+  await openSettings(page);
+  await page.getByRole("button", { name: "Mettre un mot de passe" }).click();
+  await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-import");
+  await page.getByLabel("Confirmer le mot de passe").fill("motdepasse-import");
+  await page.getByRole("button", { name: "Mettre le mot de passe" }).click();
+  await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Exporter JSON" }).click();
+  const path = await (await downloadPromise).path();
+  expect(path).not.toBeNull();
+
+  const importedContext = await browser.newContext();
+  const importedPage = await importedContext.newPage();
+  try {
+    await importedPage.goto("/club-deal-pwa/parametres");
+    importedPage.on("dialog", (dialog) => {
+      if (dialog.type() === "prompt") void dialog.accept("motdepasse-import");
+      else void dialog.accept();
+    });
+    await importedPage.locator('input[type="file"]').setInputFiles(path!);
+    await importedPage.waitForLoadState("load");
+
+    await expect(importedPage.getByRole("heading", { name: "Application protégée" })).toBeVisible();
+    await importedPage.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-import");
+    await importedPage.getByRole("button", { name: "Déverrouiller" }).click();
+    await importedPage.getByRole("link", { name: "Liste des deals" }).click();
+    await expect(importedPage.getByRole("heading", { name: dealName, exact: true })).toBeVisible();
+  } finally {
+    await importedContext.close();
+  }
+});
+
+test("importe un JSON chiffré et remplace le mot de passe local", async ({ page, browser }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page);
+  await openSettings(page);
+  await page.getByRole("button", { name: "Mettre un mot de passe" }).click();
+  await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-json");
+  await page.getByLabel("Confirmer le mot de passe").fill("motdepasse-json");
+  await page.getByRole("button", { name: "Mettre le mot de passe" }).click();
+  await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Exporter JSON" }).click();
+  const path = await (await downloadPromise).path();
+  expect(path).not.toBeNull();
+
+  const importedContext = await browser.newContext();
+  const importedPage = await importedContext.newPage();
+  try {
+    await importedPage.goto("/club-deal-pwa/parametres");
+    await importedPage.getByRole("button", { name: "Mettre un mot de passe" }).click();
+    await importedPage.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-local");
+    await importedPage.getByLabel("Confirmer le mot de passe").fill("motdepasse-local");
+    await importedPage.getByRole("button", { name: "Mettre le mot de passe" }).click();
+    await expect(importedPage.getByText("Protégée", { exact: true })).toBeVisible();
+
+    importedPage.on("dialog", (dialog) => {
+      if (dialog.type() === "prompt") void dialog.accept("motdepasse-json");
+      else void dialog.accept();
+    });
+    await importedPage.locator('input[type="file"]').setInputFiles(path!);
+    await importedPage.waitForLoadState("load");
+
+    await expect(importedPage.getByRole("heading", { name: "Application protégée" })).toBeVisible();
+    await importedPage.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-local");
+    await importedPage.getByRole("button", { name: "Déverrouiller" }).click();
+    await expect(importedPage.getByText("Mot de passe incorrect ou coffre invalide.")).toBeVisible();
+    await importedPage.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-json");
+    await importedPage.getByRole("button", { name: "Déverrouiller" }).click();
+    await expect(importedPage.getByRole("heading", { name: "Paramètres", exact: true })).toBeVisible();
+  } finally {
+    await importedContext.close();
+  }
+});
+
 test("trie les deals par échéance, montant et date de fin", async ({ page }) => {
   await openApp(page);
   await openDeals(page);

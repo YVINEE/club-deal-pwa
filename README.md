@@ -100,7 +100,7 @@ tests/e2e/                   # Parcours Playwright
 
 ## Sécurité et sauvegardes
 
-La protection par mot de passe protège les données stockées localement sur l’appareil, mais ne remplace pas une sauvegarde. Exportez régulièrement un fichier JSON et conservez-le dans un emplacement sûr. Les fichiers JSON protégés par mot de passe nécessitent ce mot de passe pour être importés.
+La protection par mot de passe protège les données stockées localement sur l’appareil, mais ne remplace pas une sauvegarde. Exportez régulièrement un fichier JSON et conservez-le dans un emplacement sûr. Les fichiers JSON protégés par mot de passe nécessitent ce mot de passe pour être importés. Importer un fichier protégé (re)définit le mot de passe de l’application sur celui du fichier.
 
 ## Notifications
 
