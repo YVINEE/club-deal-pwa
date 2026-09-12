@@ -13,7 +13,7 @@ interface DealListProps {
 
 const optionsTri = ["prochaineEcheance", "montant", "dateFin"] as const;
 export type TriDeals = (typeof optionsTri)[number];
-type FiltreDeals = "tous" | "actifs" | "prolongation";
+type FiltreDeals = "tous" | "actifs" | "termines";
 const cleTri = "club-deal-tri-deals";
 
 export interface DealListViewState {
@@ -31,7 +31,7 @@ function lireTri(): TriDeals {
   const valeur = localStorage.getItem(cleTri);
   return optionsTri.includes(valeur as TriDeals)
     ? (valeur as TriDeals)
-    : "prochaineEcheance";
+    : "dateFin";
 }
 
 export function DealList({
@@ -42,7 +42,7 @@ export function DealList({
   const location = useLocation();
   const { deals, loading, error } = useDeals(suiviEncaissements);
   const etatRetour = (location.state as DealsNavigationState | null)?.retourDeals;
-  const [filtre, setFiltre] = useState<FiltreDeals>(() => etatRetour?.filtre ?? "tous");
+  const [filtre, setFiltre] = useState<FiltreDeals>(() => etatRetour?.filtre ?? "actifs");
   const [tri, setTri] = useState<TriDeals>(() => etatRetour?.tri ?? lireTri());
   const restaurationEffectuee = useRef(false);
   const dealsTries = [...deals].sort((a, b) => {
@@ -59,11 +59,11 @@ export function DealList({
       || a.deal.nom.localeCompare(b.deal.nom, "fr");
   });
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine");
-  const dealsEnProlongation = deals.filter(({ statut }) => statut === "enProlongation");
+  const dealsTermines = deals.filter(({ statut }) => statut === "termine");
   const totalEngage = calculerCapitalEngageNet(deals.map(({ deal }) => deal));
   const dealsFiltres = dealsTries.filter(({ statut }) => {
-    if (filtre === "actifs") return statut === "actif";
-    if (filtre === "prolongation") return statut === "enProlongation";
+    if (filtre === "actifs") return statut !== "termine";
+    if (filtre === "termines") return statut === "termine";
     return true;
   });
 
@@ -148,9 +148,9 @@ export function DealList({
           </div>
           <div className="mb-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrer les deals">
           {([
+            ["actifs", `Actifs (${dealsActifs.length})`],
+            ["termines", `Terminés (${dealsTermines.length})`],
             ["tous", `Tous (${deals.length})`],
-            ["actifs", `Actifs (${deals.filter(({ statut }) => statut === "actif").length})`],
-            ["prolongation", `Prolongés (${dealsEnProlongation.length})`],
           ] as const).map(([value, label]) => (
             <button
               key={value}

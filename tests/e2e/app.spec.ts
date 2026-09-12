@@ -30,7 +30,7 @@ async function openDeadlines(page: Page) {
   await expect(page.getByRole("heading", { name: "Échéances", exact: true })).toBeVisible();
 }
 
-async function fillDeal(page: Page, name = dealName, startDate = oldStartDate) {
+async function fillDeal(page: Page, name = dealName, startDate = dateInputDansMois(1)) {
   await page.getByRole("button", { name: "Ajouter un deal" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau deal" })).toBeVisible();
 
@@ -43,6 +43,7 @@ async function fillDeal(page: Page, name = dealName, startDate = oldStartDate) {
   await fields.nth(5).fill("0");
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+  await page.getByRole("group", { name: "Filtrer les deals" }).getByRole("button", { name: /^Tous/ }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   await expect(page.getByText("Fin prévue", { exact: true }).first()).toBeVisible();
 }
@@ -161,9 +162,8 @@ test("pointe puis dépointe une échéance", async ({ page }) => {
   const suivi = page.getByRole("switch", { name: "Activer le suivi des encaissements" });
   if ((await suivi.getAttribute("aria-checked")) !== "true") await suivi.click();
   await openDeals(page);
-  await fillDeal(page);
+  await fillDeal(page, dealName, oldStartDate);
   await openDeadlines(page);
-
   await page.getByRole("button", { name: "Pointer", exact: true }).first().click();
   await expect(page.getByRole("button", { name: "Dépointer", exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Dépointer", exact: true }).first().click();
@@ -176,9 +176,9 @@ test("conserve la position après un pointage en bas de la liste des échéances
   const suivi = page.getByRole("switch", { name: "Activer le suivi des encaissements" });
   if ((await suivi.getAttribute("aria-checked")) !== "true") await suivi.click();
   await openDeals(page);
-  await fillDeal(page, "Deal échéances 1");
-  await fillDeal(page, "Deal échéances 2");
-  await fillDeal(page, "Deal échéances 3");
+  await fillDeal(page, "Deal échéances 1", oldStartDate);
+  await fillDeal(page, "Deal échéances 2", oldStartDate);
+  await fillDeal(page, "Deal échéances 3", oldStartDate);
   await openDeadlines(page);
 
   const pointer = page.getByRole("button", { name: "Pointer", exact: true }).last();
@@ -302,7 +302,7 @@ test("trie les deals par échéance, montant et date de fin", async ({ page }) =
   await createDeal("Deal B", dateInputDansMois(2), "15000");
 
   const cards = page.locator("h3");
-  await expect(page.getByLabel("Trier les deals")).toHaveValue("prochaineEcheance");
+  await expect(page.getByLabel("Trier les deals")).toHaveValue("dateFin");
   await expect(cards).toHaveText(["Deal A", "Deal B"]);
 
   await page.getByLabel("Trier les deals").selectOption("montant");
@@ -344,12 +344,24 @@ test("active l’évolution de la CSG 2026 pour un deal éligible", async ({ pag
 test("filtre les deals et les échéances", async ({ page }) => {
   await openApp(page);
   await openDeals(page);
-  await fillDeal(page);
+  await page.getByRole("button", { name: "Ajouter un deal" }).click();
+  const fields = page.locator("form input");
+  await fields.nth(0).fill(dealName);
+  await fields.nth(1).fill(oldStartDate);
+  await fields.nth(2).fill("10000");
+  await fields.nth(3).fill("12");
+  await fields.nth(4).fill("12");
+  await fields.nth(5).fill("0");
+  await page.getByRole("button", { name: "Créer", exact: true }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
 
   const dealFilters = page.getByRole("group", { name: "Filtrer les deals" });
-  await dealFilters.getByRole("button", { name: /^Actifs/ }).click();
   await expect(page.getByText("Aucun deal dans ce filtre.")).toBeVisible();
-  await dealFilters.getByRole("button", { name: /^Prolongés/ }).click();
+  await dealFilters.getByRole("button", { name: /^Terminés/ }).click();
+  await expect(page.getByRole("heading", { name: dealName, exact: true })).toBeVisible();
+  await dealFilters.getByRole("button", { name: /^Tous/ }).click();
+  await expect(page.getByRole("heading", { name: dealName, exact: true })).toBeVisible();
+  await dealFilters.getByRole("button", { name: /^Actifs/ }).click();
   await expect(page.getByText("Aucun deal dans ce filtre.")).toBeVisible();
 
   await openDeadlines(page);
