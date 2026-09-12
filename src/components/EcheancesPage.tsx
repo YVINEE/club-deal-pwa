@@ -18,7 +18,7 @@ function formatMontant(montant: number): string {
 export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [filtre, setFiltre] = useState<FiltreEcheances>("toutes");
+  const [filtre, setFiltre] = useState<FiltreEcheances | null>(null);
   const scrollARestaurer = useRef<number | null>(null);
   const { echeances, loading } = useToutesLesEcheances(refreshKey);
   const maintenant = useMemo(() => new Date(), [refreshKey]);
@@ -27,6 +27,7 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
 
   const nbAPointer = echeances.filter((echeance) => !echeance.encaissee && estEchue(echeance.date)).length;
   const nbAVenir = echeances.filter((echeance) => !echeance.encaissee && !estEchue(echeance.date)).length;
+  const filtreActif: FiltreEcheances = filtre ?? (suiviEncaissementsActif && nbAPointer > 0 ? "aPointer" : "aVenir");
   const nbEncaissees = echeances.filter((echeance) => echeance.encaissee).length;
   const totalEcheances = echeances.reduce((total, echeance) => total + echeance.montant, 0);
   const totalEncaisse = echeances
@@ -49,12 +50,12 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
     const echeancesTriees = [...echeances].sort((a, b) => a.date.getTime() - b.date.getTime());
 
     return echeancesTriees.filter((echeance) => {
-      if (filtre === "aPointer") return !echeance.encaissee && estEchue(echeance.date);
-      if (filtre === "aVenir") return !echeance.encaissee && !estEchue(echeance.date);
-      if (filtre === "encaissees") return echeance.encaissee;
+      if (filtreActif === "aPointer") return !echeance.encaissee && estEchue(echeance.date);
+      if (filtreActif === "aVenir") return !echeance.encaissee && !estEchue(echeance.date);
+      if (filtreActif === "encaissees") return echeance.encaissee;
       return true;
     });
-  }, [echeances, filtre, maintenant]);
+  }, [echeances, filtreActif, maintenant]);
 
   const totauxParMois = useMemo(() => {
     const totaux = new Map<string, number>();
@@ -123,12 +124,12 @@ export function EcheancesPage({ suiviEncaissementsActif }: EcheancesPageProps) {
             <button
               key={valeur}
               type="button"
-              aria-pressed={filtre === valeur}
+              aria-pressed={filtreActif === valeur}
               onClick={() => setFiltre(valeur)}
               className={
                 "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors " +
-                (filtre === valeur
-                  ? "border-emerald-300 bg-emerald-100 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300"
+                (filtreActif === valeur
+                  ? "border-emerald-600 bg-emerald-600 font-semibold text-white shadow-sm dark:border-emerald-500 dark:bg-emerald-500"
                   : "border-slate-200 text-slate-500 hover:text-slate-900 dark:border-white/10 dark:text-slate-400 dark:hover:text-white")
               }
             >

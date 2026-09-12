@@ -164,6 +164,9 @@ test("pointe puis dépointe une échéance", async ({ page }) => {
   await openDeals(page);
   await fillDeal(page, dealName, oldStartDate);
   await openDeadlines(page);
+  const deadlineFilters = page.getByLabel("Filtrer les échéances");
+  await expect(deadlineFilters.getByRole("button", { name: /^À pointer/ })).toHaveAttribute("aria-pressed", "true");
+  await deadlineFilters.getByRole("button", { name: /^Toutes/ }).click();
   await page.getByRole("button", { name: "Pointer", exact: true }).first().click();
   await expect(page.getByRole("button", { name: "Dépointer", exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Dépointer", exact: true }).first().click();
@@ -180,6 +183,7 @@ test("conserve la position après un pointage en bas de la liste des échéances
   await fillDeal(page, "Deal échéances 2", oldStartDate);
   await fillDeal(page, "Deal échéances 3", oldStartDate);
   await openDeadlines(page);
+  await page.getByLabel("Filtrer les échéances").getByRole("button", { name: /^Toutes/ }).click();
 
   const pointer = page.getByRole("button", { name: "Pointer", exact: true }).last();
   await pointer.scrollIntoViewIfNeeded();
@@ -366,6 +370,7 @@ test("filtre les deals et les échéances", async ({ page }) => {
 
   await openDeadlines(page);
   const deadlineFilters = page.getByLabel("Filtrer les échéances");
+  await expect(deadlineFilters.getByRole("button", { name: /^À venir/ })).toHaveAttribute("aria-pressed", "true");
   await deadlineFilters.getByRole("button", { name: /^À pointer/ }).click();
   await expect(page.getByText(dealName, { exact: true }).first()).toBeVisible();
   await deadlineFilters.getByRole("button", { name: /^Encaissées/ }).click();
@@ -379,7 +384,7 @@ test("filtre les échéances à venir", async ({ page }) => {
   await openDeadlines(page);
 
   const deadlineFilters = page.getByLabel("Filtrer les échéances");
-  await expect(deadlineFilters.getByRole("button", { name: /^À venir/ })).toBeVisible();
+  await expect(deadlineFilters.getByRole("button", { name: /^À venir/ })).toHaveAttribute("aria-pressed", "true");
   await deadlineFilters.getByRole("button", { name: /^À venir/ }).click();
   await expect(page.getByText("Deal futur", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Aucune échéance dans ce filtre.")).toHaveCount(0);

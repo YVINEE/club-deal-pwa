@@ -160,7 +160,7 @@ export function DealList({
               className={
                 "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors " +
                 (filtre === value
-                  ? "border-emerald-300 bg-emerald-100 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  ? "border-emerald-600 bg-emerald-600 font-semibold text-white shadow-sm dark:border-emerald-500 dark:bg-emerald-500"
                   : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:text-white")
               }
             >
