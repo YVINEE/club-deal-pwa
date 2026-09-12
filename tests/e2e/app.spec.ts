@@ -156,6 +156,43 @@ test("annule la dernière prolongation après confirmation", async ({ page }) =>
   await expect(page.getByText("Aucune prolongation pour ce deal", { exact: true })).toBeVisible();
 });
 
+test("prolonge un deal déjà terminé", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+
+  await page.getByRole("button", { name: "Ajouter un deal" }).click();
+  const fields = page.locator("form input");
+  await fields.nth(0).fill("Deal terminé prolongé");
+  await fields.nth(1).fill(dateInputDansMois(-15));
+  await fields.nth(2).fill("10000");
+  await fields.nth(3).fill("10");
+  await fields.nth(4).fill("12");
+  await fields.nth(5).fill("1");
+  await fields.nth(6).fill("6");
+  await page.getByRole("button", { name: "Créer", exact: true }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+
+  await page.getByRole("group", { name: "Filtrer les deals" }).getByRole("button", { name: /^Terminés/ }).click();
+  await page.getByRole("heading", { name: "Deal terminé prolongé", exact: true }).click();
+
+  await page.getByRole("button", { name: "Prolongations" }).click();
+  await expect(
+    page.getByText("Ce deal est arrivé à son terme. Ajoutez une prolongation si le contrat a été reconduit.", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Prolonger de 6 mois" }).click();
+  await expect(page.getByText("Prolongation n°1", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Ce deal est arrivé à son terme. Ajoutez une prolongation si le contrat a été reconduit.", { exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByText("Nombre maximum de prolongations atteint", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Retour" }).click();
+  const dealFilters = page.getByRole("group", { name: "Filtrer les deals" });
+  await dealFilters.getByRole("button", { name: /^Actifs/ }).click();
+  await expect(page.getByRole("heading", { name: "Deal terminé prolongé", exact: true })).toBeVisible();
+  await expect(page.getByText("En prolongation", { exact: true }).first()).toBeVisible();
+});
+
 test("pointe puis dépointe une échéance", async ({ page }) => {
   await openApp(page);
   await openSettings(page);

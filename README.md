@@ -93,7 +93,7 @@ tests/e2e/                   # Parcours Playwright
 
 - Un deal peut être trimestriel ou semestriel.
 - Les échéances sont recalculées lorsque les paramètres financiers du deal sont modifiés.
-- Un deal arrivé à son terme devient terminé, sauf prolongation déclenchée manuellement avant l’échéance.
+- Un deal arrivé à son terme devient terminé, sauf prolongation enregistrée (y compris après l’échéance).
 - Le pointage des échéances est optionnel dans les paramètres.
 - Les notifications d’échéances sont désactivées par défaut et nécessitent l’autorisation du navigateur.
 - L’import JSON remplace les données locales existantes après confirmation.

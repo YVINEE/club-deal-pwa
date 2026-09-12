@@ -36,7 +36,7 @@ export function DealDetail({
   onModifier,
   suiviEncaissementsActif,
 }: DealDetailProps) {
-  const { deals, supprimer } = useDeals();
+  const { deals, supprimer, rafraichir } = useDeals();
   const dealInfo = deals.find((d) => d.deal.id === dealId);
 
   const { prolongations, prolonger, annulerDerniere, error: erreurProlongation, refreshKey } = useProlongations(dealId);
@@ -124,7 +124,10 @@ export function DealDetail({
             deal={deal}
             prolongations={prolongations}
             statut={statut}
-            onProlonger={prolonger}
+            onProlonger={async () => {
+              await prolonger();
+              await rafraichir();
+            }}
             onAnnuler={() => setConfirmationAnnulation(true)}
             erreur={erreurProlongation}
           />
@@ -175,6 +178,7 @@ export function DealDetail({
             <AlertDialogAction
               onClick={async () => {
                 await annulerDerniere();
+                await rafraichir();
                 setConfirmationAnnulation(false);
               }}
               className="bg-red-600 text-white"

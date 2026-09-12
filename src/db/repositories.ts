@@ -1,6 +1,5 @@
 import { Deal, Echeance, Prolongation } from "../types";
 import { genererEcheances, creerProlongation } from "../utils/calculs";
-import { dateFinCourante } from "../utils/statusUtils";
 import { validerReinvestissements } from "../utils/reinvestissements";
 import { enregistrerPortefeuille, lirePortefeuille } from "./secureStorage";
 
@@ -63,9 +62,6 @@ export async function prolongerDeal(dealId: string): Promise<void> {
   if (!deal) throw new Error(`Deal ${dealId} introuvable`);
 
   const prolongationsExistantes = data.prolongations.filter((prolongation) => prolongation.dealId === dealId);
-  if (new Date() >= dateFinCourante(deal, prolongationsExistantes)) {
-    throw new Error(`Le deal "${deal.nom}" est arrivé à échéance`);
-  }
   const nouvelleProlongation: Prolongation = creerProlongation(deal, prolongationsExistantes);
 
   data.prolongations.push(nouvelleProlongation);

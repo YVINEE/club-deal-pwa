@@ -13,7 +13,7 @@ interface ProlongationsTabProps {
 }
 
 export function ProlongationsTab({ deal, prolongations, statut, onProlonger, onAnnuler, erreur }: ProlongationsTabProps) {
-  const disponible = statut !== "termine" && peutProlonger(deal, prolongations);
+  const disponible = peutProlonger(deal, prolongations);
 
   return (
     <div className="flex flex-col gap-4">
@@ -54,7 +54,13 @@ export function ProlongationsTab({ deal, prolongations, statut, onProlonger, onA
         </Button>
       )}
 
-      {!disponible && statut !== "termine" && prolongations.length >= deal.nombreMaxProlongations && (
+      {statut === "termine" && disponible && (
+        <p className="text-sm text-gray-500 text-center">
+          Ce deal est arrivé à son terme. Ajoutez une prolongation si le contrat a été reconduit.
+        </p>
+      )}
+
+      {!disponible && (
         <div className="text-sm text-gray-500 text-center">Nombre maximum de prolongations atteint</div>
       )}
     </div>
