@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDeals } from "./hooks/useDeals";
-import { DealList, DealsNavigationState, DealListViewState } from "./components/DealList";
+import { DealList } from "./components/DealList";
 import { DealDetail } from "./components/DealDetail";
 import { DealForm, SourceReinvestissement } from "./components/DealForm";
 import { Deal } from "./types";
@@ -31,6 +31,7 @@ import {
   notifierEcheancesDuJour,
 } from "./utils/notifications";
 import { capitauxDisponibles } from "./utils/reinvestissements";
+import { enregistrerVueListe } from "./utils/dealsViewState";
 
 type Theme = "light" | "dark";
 const DUREE_VERROUILLAGE_MS = 60_000;
@@ -286,12 +287,14 @@ function EcranListe({ suiviEncaissements }: { suiviEncaissements: boolean }) {
   return (
     <DealList
       suiviEncaissements={suiviEncaissements}
-      onSelectDeal={(dealId, etatRetour: DealListViewState) =>
-        navigate(`/deal/${dealId}`, { state: { retourDeals: etatRetour } })
-      }
-      onAjouterDeal={(etatRetour: DealListViewState) =>
-        navigate("/nouveau", { state: { retourDeals: etatRetour } })
-      }
+      onSelectDeal={(dealId, etatRetour) => {
+        enregistrerVueListe(etatRetour);
+        navigate(`/deal/${dealId}`);
+      }}
+      onAjouterDeal={(etatRetour) => {
+        enregistrerVueListe(etatRetour);
+        navigate("/nouveau");
+      }}
     />
   );
 }
@@ -303,19 +306,20 @@ function EcranDetail({
 }) {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
-  const navigationState = useLocation().state as DealsNavigationState | null;
+  const location = useLocation();
   if (!dealId) return null;
 
-  function revenirAuxDeals() {
-    navigate("/deals", { state: navigationState });
+  function revenir() {
+    if (location.key !== "default") navigate(-1);
+    else navigate("/deals", { replace: true });
   }
 
   return (
     <DealDetail
       dealId={dealId}
       suiviEncaissementsActif={suiviEncaissementsActif}
-      onRetour={revenirAuxDeals}
-      onModifier={() => navigate(`/deal/${dealId}/modifier`, { state: navigationState })}
+      onRetour={revenir}
+      onModifier={() => navigate(`/deal/${dealId}/modifier`)}
     />
   );
 }
@@ -323,7 +327,7 @@ function EcranDetail({
 function EcranFormulaire() {
   const { dealId } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
-  const navigationState = useLocation().state as DealsNavigationState | null;
+  const location = useLocation();
   const { deals, creer, modifier } = useDeals();
 
   const dealExistant = dealId ? deals.find((d) => d.deal.id === dealId)?.deal : undefined;
@@ -339,14 +343,18 @@ function EcranFormulaire() {
       }));
   }, [deals]);
 
+  function revenir() {
+    if (location.key !== "default") navigate(-1);
+    else navigate("/deals", { replace: true });
+  }
+
   async function gererSoumission(deal: Deal) {
     if (dealExistant) {
       await modifier(deal);
-      navigate("/deals", { state: navigationState });
     } else {
       await creer(deal);
-      navigate("/deals", { state: navigationState });
     }
+    revenir();
   }
 
   return (
@@ -354,7 +362,7 @@ function EcranFormulaire() {
       dealExistant={dealExistant}
       sourcesDisponibles={sourcesDisponibles}
       onSubmit={gererSoumission}
-      onAnnuler={() => navigate("/deals", { state: navigationState })}
+      onAnnuler={revenir}
     />
   );
 }

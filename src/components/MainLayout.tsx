@@ -34,6 +34,7 @@ export function MainLayout() {
               key={to}
               to={to}
               end={to === "/"}
+              replace
               aria-label={description}
               className={({ isActive }) =>
                 `flex flex-1 flex-col items-center gap-1 py-2 text-[11px] font-medium ${

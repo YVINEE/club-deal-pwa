@@ -74,7 +74,7 @@ test("crée, annule, modifie et revient à la liste des deals", async ({ page })
   await expect(page.getByRole("heading", { name: "Modifier le deal" })).toBeVisible();
   await page.locator("form input").nth(0).fill("Deal Playwright modifié");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+$/);
   await expect(page.getByRole("heading", { name: "Deal Playwright modifié", exact: true })).toBeVisible();
 });
 
@@ -87,6 +87,46 @@ test("ouvre un deal puis utilise le bouton retour", async ({ page }) => {
   await page.getByRole("button", { name: "Retour" }).click();
   await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
   await expect(page.getByRole("heading", { name: "Deals", exact: true })).toBeVisible();
+});
+
+test("le bouton retour revient à la vue d’origine", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page);
+
+  await page.getByRole("heading", { name: dealName, exact: true }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+
+  await page.getByRole("heading", { name: dealName, exact: true }).click();
+  await page.getByRole("button", { name: "Modifier" }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+\/modifier$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+$/);
+  await page.getByRole("button", { name: "Retour" }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+
+  await page.getByRole("button", { name: "Ajouter un deal" }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/nouveau$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+
+  await page.getByRole("link", { name: "Toutes les échéances" }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/echeances$/);
+  await page.getByText(dealName, { exact: true }).first().click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/echeances$/);
+});
+
+test("le changement d’onglet ne s’empile pas dans l’historique", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await page.getByRole("link", { name: "Toutes les échéances" }).click();
+  await expect(page).toHaveURL(/\/club-deal-pwa\/echeances$/);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/club-deal-pwa\/deals$/);
 });
 
 test("restaure la position, le tri et le filtre après les retours d’un deal", async ({ page }) => {
@@ -120,12 +160,14 @@ test("restaure la position, le tri et le filtre après les retours d’un deal",
   await deal.click();
   await page.getByRole("button", { name: "Modifier" }).click();
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await page.getByRole("button", { name: "Retour" }).click();
   await expect(deal).toBeInViewport();
 
   await deal.click();
   await page.getByRole("button", { name: "Modifier" }).click();
   await page.locator("form input").nth(0).fill("Deal position 1 modifié");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await page.getByRole("button", { name: "Retour" }).click();
   const dealModifie = page.getByRole("heading", { name: "Deal position 1 modifié", exact: true });
   await expect(dealModifie).toBeInViewport();
   await expect(page.getByLabel("Trier les deals")).toHaveValue("montant");

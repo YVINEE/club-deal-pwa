@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { useDeals } from "../hooks/useDeals";
 import { DealCard } from "./DealCard";
 import { Plus } from "lucide-react";
 import { calculerCapitalEngageNet } from "../utils/reinvestissements";
-
+import { effacerVueListe, lireVueListe, type VueListeDeals } from "../utils/dealsViewState";
 interface DealListProps {
   onSelectDeal: (dealId: string, etatRetour: DealListViewState) => void;
   onAjouterDeal: (etatRetour: DealListViewState) => void;
@@ -16,16 +15,7 @@ export type TriDeals = (typeof optionsTri)[number];
 type FiltreDeals = "tous" | "actifs" | "termines";
 const cleTri = "club-deal-tri-deals";
 
-export interface DealListViewState {
-  scrollY: number;
-  filtre: FiltreDeals;
-  tri: TriDeals;
-  dealId?: string;
-}
-
-export interface DealsNavigationState {
-  retourDeals?: DealListViewState;
-}
+export type DealListViewState = VueListeDeals;
 
 function lireTri(): TriDeals {
   const valeur = localStorage.getItem(cleTri);
@@ -39,11 +29,10 @@ export function DealList({
   onAjouterDeal,
   suiviEncaissements,
 }: DealListProps) {
-  const location = useLocation();
   const { deals, loading, error } = useDeals(suiviEncaissements);
-  const etatRetour = (location.state as DealsNavigationState | null)?.retourDeals;
-  const [filtre, setFiltre] = useState<FiltreDeals>(() => etatRetour?.filtre ?? "actifs");
-  const [tri, setTri] = useState<TriDeals>(() => etatRetour?.tri ?? lireTri());
+  const [etatInitial] = useState(() => lireVueListe());
+  const [filtre, setFiltre] = useState<FiltreDeals>(() => etatInitial?.filtre ?? "actifs");
+  const [tri, setTri] = useState<TriDeals>(() => etatInitial?.tri ?? lireTri());
   const restaurationEffectuee = useRef(false);
   const dealsTries = [...deals].sort((a, b) => {
     if (tri === "montant") {
@@ -70,14 +59,16 @@ export function DealList({
   useEffect(() => {
     if (loading || restaurationEffectuee.current) return;
     restaurationEffectuee.current = true;
+    if (!etatInitial) return;
+    effacerVueListe();
     let secondeFrame = 0;
     let restaurationDifferee: number | undefined;
     const frame = window.requestAnimationFrame(() => {
       const restaurerDefilement = () => {
-        window.scrollTo(0, etatRetour?.scrollY ?? 0);
-        if (!etatRetour?.dealId) return;
+        window.scrollTo(0, etatInitial.scrollY ?? 0);
+        if (!etatInitial.dealId) return;
 
-        const cible = document.getElementById(`deal-card-${etatRetour.dealId}`);
+        const cible = document.getElementById(`deal-card-${etatInitial.dealId}`);
         if (!cible) return;
         const margeHaute = 80;
         const margeBasse = window.innerHeight - 100;
@@ -89,10 +80,7 @@ export function DealList({
 
       secondeFrame = window.requestAnimationFrame(() => {
         restaurerDefilement();
-        if (etatRetour) {
-          window.history.replaceState({ ...window.history.state, usr: null }, "", window.location.href);
-          restaurationDifferee = window.setTimeout(restaurerDefilement, 100);
-        }
+        restaurationDifferee = window.setTimeout(restaurerDefilement, 100);
       });
     });
     return () => {
@@ -100,7 +88,7 @@ export function DealList({
       window.cancelAnimationFrame(secondeFrame);
       if (restaurationDifferee !== undefined) window.clearTimeout(restaurationDifferee);
     };
-  }, [loading, deals.length, etatRetour]);
+  }, [loading, deals.length, etatInitial]);
 
   function etatVue(dealId?: string): DealListViewState {
     return { scrollY: window.scrollY, filtre, tri, dealId };
