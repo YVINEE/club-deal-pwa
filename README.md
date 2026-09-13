@@ -9,6 +9,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 - Tableau de bord avec indicateurs globaux (valeur actuelle, capital engagé, capital récupéré, apports externes nets, gains acquis, gains futurs, total final prévu) et un détail par année, du 1er janvier au 31 décembre.
 - Liste des deals triée par défaut par date de fin (tri par prochaine échéance, montant investi ou date de fin au choix).
 - Création, modification et suppression de deals.
+- Réinvestissement du capital d’un deal terminé dans un nouveau deal, modifiable après coup (ajout, changement ou retrait).
 - Rendements trimestriels ou semestriels et calcul automatique des coupons.
 - Suivi des échéances avec pointage et dépointage des encaissements.
 - Filtres de la liste des deals : Actifs (par défaut), Terminés, Tous.
@@ -98,6 +99,7 @@ tests/e2e/                   # Parcours Playwright
 - Un deal arrivé à son terme devient terminé, sauf prolongation enregistrée (y compris après l’échéance).
 - À son terme, le capital d’un deal quitte le capital engagé et devient du capital récupéré (disponible), sauf la part réinvestie dans un nouveau deal.
 - Capital engagé = montants des deals non terminés ; capital récupéré = montants des deals terminés non réinvestis ; apports externes nets = montants − réinvestissements.
+- Le réinvestissement d’un deal peut être défini ou modifié à tout moment, y compris après sa création.
 - Le pointage des échéances est optionnel dans les paramètres.
 - Les notifications d’échéances sont désactivées par défaut et nécessitent l’autorisation du navigateur.
 - L’import JSON remplace les données locales existantes après confirmation.

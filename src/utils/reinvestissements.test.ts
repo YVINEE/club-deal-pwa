@@ -40,6 +40,15 @@ describe("réinvestissements", () => {
     expect(capitauxDisponibles([source]).get(source.id)).toBe(10000);
   });
 
+  it("réintègre un réinvestissement exclu dans la disponibilité de sa source", () => {
+    const { debut, fin } = datesDealTermine();
+    const source = deal("source", 10000, debut);
+    const destination = deal("destination", 6000, new Date(fin), { sourceDealId: source.id, montant: 4000 });
+
+    expect(capitauxDisponibles([source, destination], destination.reinvestissement).get(source.id)).toBe(10000);
+    expect(capitauxDisponibles([source, destination], { sourceDealId: source.id, montant: 1000 }).get(source.id)).toBe(7000);
+  });
+
   it("valide les chaînes et refuse les dépassements de pool", () => {
     const { debut, fin } = datesDealTermine();
     const source = deal("source", 10000, debut);

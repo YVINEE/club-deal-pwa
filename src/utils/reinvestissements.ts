@@ -1,4 +1,4 @@
-import { Deal, Prolongation } from "../types";
+import { Deal, Prolongation, Reinvestissement } from "../types";
 import { dateFinCourante } from "./statusUtils";
 
 const EPSILON_CENTIMES = 0.000001;
@@ -20,8 +20,16 @@ export function montantsReinvestisParSource(deals: Deal[]): Map<string, number> 
   return montants;
 }
 
-export function capitauxDisponibles(deals: Deal[]): Map<string, number> {
+export function capitauxDisponibles(
+  deals: Deal[],
+  reinvestissementAExclure?: Reinvestissement,
+): Map<string, number> {
   const reinvestis = montantsReinvestisParSource(deals);
+  if (reinvestissementAExclure) {
+    const source = reinvestissementAExclure.sourceDealId;
+    const restant = (reinvestis.get(source) ?? 0) - reinvestissementAExclure.montant;
+    reinvestis.set(source, Math.max(0, arrondirCentimes(restant)));
+  }
   return new Map(deals.map((deal) => [
     deal.id,
     Math.max(0, arrondirCentimes(deal.montant - (reinvestis.get(deal.id) ?? 0))),

@@ -609,3 +609,29 @@ test("crée un deal par réinvestissement et affiche son origine", async ({ page
   await page.getByRole("heading", { name: "Deal réinvesti", exact: true }).click();
   await expect(page.getByText(/Capital réinvesti depuis Deal source/)).toBeVisible();
 });
+
+test("ajoute puis retire un réinvestissement depuis la modification", async ({ page }) => {
+  await openApp(page);
+  await openDeals(page);
+  await fillDeal(page, "Deal source oublié", oldStartDate);
+  await fillDeal(page, "Deal à compléter");
+
+  await page.getByRole("heading", { name: "Deal à compléter", exact: true }).click();
+  await page.getByRole("button", { name: "Modifier" }).click();
+  await expect(page.getByRole("heading", { name: "Modifier le deal" })).toBeVisible();
+
+  await page.getByText("Réinvestir depuis un deal terminé", { exact: true }).locator("..").getByRole("combobox").first().click();
+  await page.getByRole("option", { name: /Deal source oublié/ }).click();
+  await expect(page.locator("form input").nth(3)).toHaveValue("10000");
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+
+  await expect(page).toHaveURL(/\/club-deal-pwa\/deal\/[^/]+$/);
+  await expect(page.getByText(/Capital réinvesti depuis Deal source oublié/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Modifier" }).click();
+  await page.getByText("Réinvestir depuis un deal terminé", { exact: true }).locator("..").getByRole("combobox").first().click();
+  await page.getByRole("option", { name: "Aucun réinvestissement" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+
+  await expect(page.getByText(/Capital réinvesti depuis/)).toHaveCount(0);
+});

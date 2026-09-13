@@ -187,7 +187,7 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler, sourcesDisponibles
     ) {
       nouvellesErreurs.montantCouponApresEvolutionFiscale = "Montant de coupon invalide";
     }
-    if (!dealExistant && form.sourceDealId) {
+    if (form.sourceDealId) {
       const source = sourcesDisponibles.find((item) => item.id === form.sourceDealId);
       const montantReinvesti = Number(form.montantReinvesti);
       if (!source) nouvellesErreurs.sourceDealId = "Deal source invalide";
@@ -223,9 +223,9 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler, sourcesDisponibles
         montantCouponApresEvolutionFiscale: evolutionFiscaleEligible && form.appliquerEvolutionFiscale
           ? Number(form.montantCouponApresEvolutionFiscale)
           : undefined,
-        reinvestissement: dealExistant?.reinvestissement ?? (!dealExistant && form.sourceDealId
+        reinvestissement: form.sourceDealId
           ? { sourceDealId: form.sourceDealId, montant: arrondirCentimes(Number(form.montantReinvesti)) }
-          : undefined),
+          : undefined,
       };
       setErreurSoumission(null);
       await onSubmit(deal);
@@ -270,48 +270,47 @@ export function DealForm({ dealExistant, onSubmit, onAnnuler, sourcesDisponibles
         />
       </Champ>
 
-      {!dealExistant && sourcesDisponibles.some((source) => source.disponible > 0) && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
-          <Champ label="Réinvestir depuis un deal terminé" erreur={erreurs.sourceDealId}>
-            <Select value={form.sourceDealId || "aucun"} onValueChange={(value) => selectionnerSource(value === "aucun" ? "" : value)}>
-              <SelectTrigger className="h-12 text-base">
-                <SelectValue placeholder="Aucun réinvestissement" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aucun">Aucun réinvestissement</SelectItem>
-                {sourcesDisponibles.filter((source) => source.disponible > 0).map((source) => (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
+        <Champ label="Réinvestir depuis un deal terminé" erreur={erreurs.sourceDealId}>
+          <Select value={form.sourceDealId || "aucun"} onValueChange={(value) => selectionnerSource(value === "aucun" ? "" : value)}>
+            <SelectTrigger className="h-12 text-base">
+              <SelectValue placeholder="Aucun réinvestissement" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="aucun">Aucun réinvestissement</SelectItem>
+              {sourcesDisponibles
+                .filter((source) => source.disponible > 0 || source.id === form.sourceDealId)
+                .map((source) => (
                   <SelectItem key={source.id} value={source.id}>
                     {source.nom} · {source.disponible.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} € disponibles
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+            </SelectContent>
+          </Select>
+        </Champ>
+        {!form.sourceDealId && sourcesDisponibles.every((source) => source.disponible <= 0) && (
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            Aucun capital disponible à réinvestir pour le moment.
+          </p>
+        )}
+        {form.sourceDealId && (
+          <Champ label="Montant réinvesti (€)" erreur={erreurs.montantReinvesti}>
+            <Input
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="0.01"
+              max={sourcesDisponibles.find((source) => source.id === form.sourceDealId)?.disponible}
+              value={form.montantReinvesti}
+              onChange={(e) => majMontantReinvesti(e.target.value)}
+              className="h-12 text-base"
+            />
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Capital disponible : {sourcesDisponibles.find((source) => source.id === form.sourceDealId)?.disponible.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+            </span>
           </Champ>
-          {form.sourceDealId && (
-            <Champ label="Montant réinvesti (€)" erreur={erreurs.montantReinvesti}>
-              <Input
-                type="number"
-                inputMode="decimal"
-                min="0.01"
-                step="0.01"
-                max={sourcesDisponibles.find((source) => source.id === form.sourceDealId)?.disponible}
-                value={form.montantReinvesti}
-                onChange={(e) => majMontantReinvesti(e.target.value)}
-                className="h-12 text-base"
-              />
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                Capital disponible : {sourcesDisponibles.find((source) => source.id === form.sourceDealId)?.disponible.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
-              </span>
-            </Champ>
-          )}
-        </div>
-      )}
-
-      {dealExistant?.reinvestissement && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Réinvesti depuis {sourcesDisponibles.find((source) => source.id === dealExistant.reinvestissement?.sourceDealId)?.nom ?? "un deal existant"} : {dealExistant.reinvestissement.montant.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
-        </p>
-      )}
+        )}
+      </div>
 
       <Champ label="Rendement annuel (%)" erreur={erreurs.rendementAnnuel}>
         <Input

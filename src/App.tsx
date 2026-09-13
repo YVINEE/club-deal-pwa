@@ -342,16 +342,19 @@ function EcranFormulaire() {
 
   const dealExistant = dealId ? deals.find((d) => d.deal.id === dealId)?.deal : undefined;
   const sourcesDisponibles = useMemo<SourceReinvestissement[]>(() => {
-    const disponibles = capitauxDisponibles(deals.map(({ deal }) => deal));
+    const disponibles = capitauxDisponibles(
+      deals.map(({ deal }) => deal),
+      dealExistant?.reinvestissement,
+    );
     return deals
-      .filter(({ statut }) => statut === "termine")
+      .filter(({ deal, statut }) => statut === "termine" && deal.id !== dealExistant?.id)
       .map(({ deal, dateFin }) => ({
         id: deal.id,
         nom: deal.nom,
         disponible: disponibles.get(deal.id) ?? 0,
         dateFin,
       }));
-  }, [deals]);
+  }, [deals, dealExistant]);
 
   function revenir() {
     if (location.key !== "default") navigate(-1);

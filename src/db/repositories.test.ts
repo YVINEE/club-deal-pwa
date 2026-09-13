@@ -68,4 +68,26 @@ describe("repositories et réinvestissements", () => {
       montant: 4000,
     });
   });
+
+  it("permet d'ajouter puis de retirer un réinvestissement en modification", async () => {
+    const dateSource = new Date();
+    dateSource.setFullYear(dateSource.getFullYear() - 2);
+    const dateDestination = new Date();
+    dateDestination.setMonth(dateDestination.getMonth() + 1);
+    const source = deal("source", dateSource);
+    const destination = deal("destination", dateDestination);
+    stockage.data = { deals: [source, destination], prolongations: [], echeances: [] };
+
+    await modifierDeal({
+      ...destination,
+      reinvestissement: { sourceDealId: source.id, montant: 4000 },
+    });
+    expect(stockage.data.deals.find((deal) => deal.id === destination.id)?.reinvestissement).toEqual({
+      sourceDealId: source.id,
+      montant: 4000,
+    });
+
+    await modifierDeal({ ...destination, reinvestissement: undefined });
+    expect(stockage.data.deals.find((deal) => deal.id === destination.id)?.reinvestissement).toBeUndefined();
+  });
 });
