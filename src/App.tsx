@@ -171,11 +171,11 @@ export default function App() {
       const url = URL.createObjectURL(blob);
       const lien = document.createElement("a");
       lien.href = url;
-      lien.download = "club-deal-sauvegarde.json";
+      lien.download = `sauvegarde-club-deal-${new Date().toISOString().slice(0, 10)}.json`;
       lien.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Export impossible");
+      window.alert(error instanceof Error ? error.message : "Sauvegarde impossible");
     }
   }
 
@@ -185,20 +185,20 @@ export default function App() {
       const entete = JSON.parse(contenu) as { encrypted?: boolean };
       if (entete.encrypted) {
         const message =
-          "Ce fichier est protégé par mot de passe. L'importer remplacera toutes les données locales et " +
+          "Ce fichier de sauvegarde est protégé par mot de passe. Le restaurer remplacera toutes les données locales et " +
           "définira ce mot de passe comme mot de passe de l'application. Continuer ?";
         if (!window.confirm(message)) return;
         const motDePasse =
-          window.prompt("Mot de passe du fichier JSON (il deviendra le mot de passe de l'application)") ?? undefined;
+          window.prompt("Mot de passe de ce fichier de sauvegarde (il deviendra le mot de passe de l'application)") ?? undefined;
         if (!motDePasse) throw new Error("Mot de passe requis");
         await importerJson(contenu, motDePasse);
       } else {
-        if (!window.confirm("Remplacer toutes les données locales par ce fichier ?")) return;
+        if (!window.confirm("Restaurer cette sauvegarde ? Vos données actuelles seront remplacées.")) return;
         await importerJson(contenu);
       }
       window.location.reload();
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Import impossible");
+      window.alert(error instanceof Error ? error.message : "Restauration impossible");
     }
   }
 

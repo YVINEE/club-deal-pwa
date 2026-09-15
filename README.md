@@ -17,7 +17,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 - Gestion des prolongations avec suivi de la maturité contractuelle.
 - Graphique de trajectoire du portefeuille (historique complet) et un graphique par année, du 1er janvier au 31 décembre.
 - Export CSV et calendrier ICS depuis le détail d’un deal.
-- Export et import JSON pour sauvegarder ou restaurer les données locales.
+- Sauvegarde et restauration des données locales dans un fichier (export/import JSON).
 - Notifications locales le jour des échéances, activables dans les paramètres.
 - Stockage local Dexie/IndexedDB, utilisable hors ligne.
 - Chiffrement optionnel de la base locale par mot de passe.

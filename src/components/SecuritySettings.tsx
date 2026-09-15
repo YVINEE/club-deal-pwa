@@ -144,7 +144,7 @@ export function SecuritySettings({
               <Database size={17} aria-hidden="true" />
             </span>
             <div>
-              <h3 className="font-semibold">Stockage local &amp; Dexie</h3>
+              <h3 className="font-semibold">Mes données</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Données conservées sur cet appareil.</p>
             </div>
           </div>
@@ -229,16 +229,20 @@ export function SecuritySettings({
           </div>
         )}
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button type="button" variant="outline" onClick={onExporterJson} className="h-auto min-h-20 flex-col gap-1.5 py-3">
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Vos données sont enregistrées uniquement sur cet appareil. Faites une sauvegarde régulière pour les retrouver si vous changez d’appareil ou si elles sont effacées.
+        </p>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button type="button" variant="outline" onClick={onExporterJson} className="h-auto min-h-20 flex-col gap-1.5 whitespace-normal px-2 py-3 text-center leading-tight">
             <Download size={18} aria-hidden="true" />
-            <span>Exporter JSON</span>
-            <span className="text-[11px] font-normal text-slate-500">Sauvegarde locale</span>
+            <span>Sauvegarder mes données</span>
+            <span className="text-[11px] font-normal text-slate-500">Enregistre un fichier à garder</span>
           </Button>
-          <label className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-3 text-center text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
+          <label className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-3 text-center text-sm font-medium leading-tight transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
             <Upload size={18} aria-hidden="true" />
-            <span>Importer JSON</span>
-            <span className="text-[11px] font-normal text-slate-500">Restaurer un fichier</span>
+            <span>Restaurer mes données</span>
+            <span className="text-[11px] font-normal text-slate-500">Choisir un fichier de sauvegarde</span>
             <input
               type="file"
               accept="application/json,.json"

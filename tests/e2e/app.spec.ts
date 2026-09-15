@@ -369,14 +369,14 @@ test("active le chiffrement, recharge et déverrouille", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Application protégée" })).toBeVisible();
 });
 
-test("exporte puis importe un JSON", async ({ page, browser }) => {
+test("sauvegarde puis restaure les données", async ({ page, browser }) => {
   await openApp(page);
   await openDeals(page);
   await fillDeal(page);
   await openSettings(page);
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Exporter JSON" }).click();
+  await page.getByRole("button", { name: "Sauvegarder mes données" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/\.json$/);
   const path = await download.path();
@@ -396,7 +396,7 @@ test("exporte puis importe un JSON", async ({ page, browser }) => {
   }
 });
 
-test("importe un JSON chiffré et active le mot de passe du fichier", async ({ page, browser }) => {
+test("restaure une sauvegarde chiffrée et active le mot de passe du fichier", async ({ page, browser }) => {
   await openApp(page);
   await openDeals(page);
   await fillDeal(page);
@@ -408,7 +408,7 @@ test("importe un JSON chiffré et active le mot de passe du fichier", async ({ p
   await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Exporter JSON" }).click();
+  await page.getByRole("button", { name: "Sauvegarder mes données" }).click();
   const path = await (await downloadPromise).path();
   expect(path).not.toBeNull();
 
@@ -433,7 +433,7 @@ test("importe un JSON chiffré et active le mot de passe du fichier", async ({ p
   }
 });
 
-test("importe un JSON chiffré et remplace le mot de passe local", async ({ page, browser }) => {
+test("restaure une sauvegarde chiffrée et remplace le mot de passe local", async ({ page, browser }) => {
   await openApp(page);
   await openDeals(page);
   await fillDeal(page);
@@ -445,7 +445,7 @@ test("importe un JSON chiffré et remplace le mot de passe local", async ({ page
   await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Exporter JSON" }).click();
+  await page.getByRole("button", { name: "Sauvegarder mes données" }).click();
   const path = await (await downloadPromise).path();
   expect(path).not.toBeNull();
 
