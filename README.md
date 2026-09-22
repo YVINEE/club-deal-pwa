@@ -6,7 +6,7 @@ Application déployée sur [GitHub Pages](https://yvinee.github.io/club-deal-pwa
 
 ## Fonctionnalités
 
-- Tableau de bord avec indicateurs globaux (valeur actuelle, capital engagé, capital récupéré, apports externes nets, gains acquis, gains futurs, total final prévu) et un détail par année, du 1er janvier au 31 décembre.
+- Tableau de bord avec indicateurs globaux (valeur actuelle, capital engagé, capital récupéré, apports externes nets, gains acquis/futurs cumulés, total final prévu), un focus sur l’année en cours (gains acquis depuis le 1er janvier, gains à venir jusqu’au 31 décembre) et un détail par année, du 1er janvier au 31 décembre.
 - Liste des deals triée par défaut par date de fin (tri par prochaine échéance, montant investi ou date de fin au choix).
 - Création, modification et suppression de deals.
 - Réinvestissement du capital d’un deal terminé dans un nouveau deal, modifiable après coup (ajout, changement ou retrait).

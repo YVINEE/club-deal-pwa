@@ -2,10 +2,11 @@ import { useMemo } from "react";
 import { differenceInCalendarDays } from "date-fns";
 import { CalendarClock, Check, Database, TrendingUp } from "lucide-react";
 import { formatDateFr } from "../utils/dateUtils";
-import { calculerSyntheseDashboard, DashboardDeal } from "../utils/dashboard";
+import { calculerSyntheseDashboard, calculerSynthesePourAnnee, DashboardDeal } from "../utils/dashboard";
 import { StorageMode } from "../db/secureStorage";
 import { TrajectoireChart } from "./TrajectoireChart";
 import { VueAnnuelle } from "./VueAnnuelle";
+import { AnneeEnCours } from "./AnneeEnCours";
 
 interface DashboardProps {
   deals: DashboardDeal[];
@@ -36,6 +37,13 @@ function pourcentage(value: number): string {
 export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMode }: DashboardProps) {
   const synthese = useMemo(
     () => calculerSyntheseDashboard(deals, new Date(), { suiviEncaissements: suiviEncaissementsActif, capitalEngageNet: true }),
+    [deals, suiviEncaissementsActif],
+  );
+  const syntheseAnneeEnCours = useMemo(
+    () =>
+      calculerSynthesePourAnnee(deals, new Date().getFullYear(), new Date(), {
+        suiviEncaissements: suiviEncaissementsActif,
+      }),
     [deals, suiviEncaissementsActif],
   );
   const dealsActifs = deals.filter(({ statut }) => statut !== "termine").length;
@@ -76,10 +84,12 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
         <Indicateur label="Capital engagé" valeur={montant(synthese.capitalEngage)} />
         <Indicateur label="Capital récupéré" valeur={montant(synthese.capitalRecupere)} />
         <Indicateur label="Apports externes nets" valeur={montant(synthese.apportsExternesNets)} />
-        <Indicateur label="Gains acquis" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-700 dark:text-emerald-300" />
-        <Indicateur label="Gains futurs" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-700 dark:text-emerald-300" />
+        <Indicateur label="Gains acquis cumulés" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-700 dark:text-emerald-300" />
+        <Indicateur label="Gains futurs cumulés" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-700 dark:text-emerald-300" />
         <Indicateur label="Total final prévu" valeur={montant(synthese.totalFinal)} couleur="text-purple-700 dark:text-purple-300" />
       </div>
+
+      <AnneeEnCours synthese={syntheseAnneeEnCours} />
 
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
         <span>

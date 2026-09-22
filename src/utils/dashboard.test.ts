@@ -3,6 +3,7 @@ import { Echeance } from "../types";
 import {
   calculerSyntheseAnnuelle,
   calculerSyntheseDashboard,
+  calculerSynthesePourAnnee,
   capitalMoyenEngage,
   DashboardDeal,
   pointsPourPeriode,
@@ -265,6 +266,31 @@ describe("calculerSyntheseAnnuelle", () => {
       gainsFutursRestants: 0,
       valeurCloture: 13280,
       totalFinalPrevu: 13280,
+    });
+  });
+});
+
+describe("calculerSynthesePourAnnee", () => {
+  it("calcule une année isolée, même hors de la plage des deals", () => {
+    const premier = deal(10000, "2025-02-01");
+    premier.echeances = [echeance(premier.deal.id, "2025-05-01", 200)];
+
+    expect(calculerSynthesePourAnnee([premier], 2025, d("2026-06-15"))).toMatchObject({
+      annee: 2025,
+      terminee: true,
+      interetsAnnee: 200,
+      interetsAcquisAnnee: 200,
+      interetsFutursAnnee: 0,
+      nouveauxPlacements: 10000,
+    });
+
+    expect(calculerSynthesePourAnnee([premier], 2030, d("2026-06-15"))).toMatchObject({
+      annee: 2030,
+      interetsAnnee: 0,
+      interetsAcquisAnnee: 0,
+      nouveauxPlacements: 0,
+      remboursements: 0,
+      capitalEngageCloture: 0,
     });
   });
 });
