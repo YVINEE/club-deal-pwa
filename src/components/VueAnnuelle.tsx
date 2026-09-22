@@ -84,11 +84,7 @@ function CarteAnnee({ synthese, points }: { synthese: SyntheseAnnuelle; points: 
         <Ligne label="Cash 31/12" valeur={montant(synthese.cashCloture)} />
         <Ligne
           label="Intérêts de l’année"
-          valeur={
-            synthese.interetsFutursAnnee > 0
-              ? montant(synthese.interetsAcquisAnnee) + " + " + montant(synthese.interetsFutursAnnee)
-              : montant(synthese.interetsAcquisAnnee)
-          }
+          valeur={montant(synthese.interetsAnnee)}
           couleur="text-emerald-700 dark:text-emerald-300"
         />
         <Ligne label="Gains futurs restants" valeur={montant(synthese.gainsFutursRestants)} couleur="text-emerald-700 dark:text-emerald-300" />
