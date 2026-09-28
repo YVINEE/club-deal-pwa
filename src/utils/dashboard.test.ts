@@ -6,6 +6,7 @@ import {
   calculerSynthesePourAnnee,
   capitalMoyenEngage,
   DashboardDeal,
+  nombreDealsEnCours,
   pointsPourPeriode,
 } from "./dashboard";
 
@@ -177,6 +178,29 @@ describe("capitalMoyenEngage", () => {
 
     expect(capitalMoyenEngage([premier], d("2025-01-01"), d("2026-01-01"))).toBe(10000);
     expect(capitalMoyenEngage([premier], d("2026-01-01"), d("2027-01-01"))).toBe(0);
+  });
+});
+
+describe("nombreDealsEnCours", () => {
+  it("ne compte que les deals commencés et non terminés", () => {
+    const futur = deal(10000, "2026-06-01");
+    const enCours = deal(5000, "2025-01-01");
+    const termine = deal(4000, "2024-01-01");
+
+    expect(nombreDealsEnCours([futur, enCours, termine], d("2025-06-01"))).toBe(1);
+  });
+
+  it("reste cohérent avec le capital en cours", () => {
+    const futur = deal(10000, "2026-06-01");
+    const enCours = deal(5000, "2025-01-01");
+    const termine = deal(4000, "2024-01-01");
+    const portefeuille = [futur, enCours, termine];
+
+    const nombre = nombreDealsEnCours(portefeuille, d("2025-06-01"));
+    const capital = calculerSyntheseDashboard(portefeuille, d("2025-06-01")).capitalEngage;
+
+    expect(nombre).toBe(1);
+    expect(capital).toBe(5000);
   });
 });
 

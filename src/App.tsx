@@ -241,12 +241,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route
               path="/"
-              element={
-                <DashboardPage
-                  suiviEncaissementsActif={suiviEncaissementsActif}
-                  storageMode={storageMode}
-                />
-              }
+              element={<DashboardPage suiviEncaissementsActif={suiviEncaissementsActif} />}
             />
             <Route
               path="/deals"

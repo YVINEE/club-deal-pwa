@@ -92,6 +92,15 @@ export function capitalEngageA(deals: DashboardDeal[], date: Date): number {
   );
 }
 
+/** Nombre de deals effectivement commencés et non terminés à la date donnée (même population que capitalEngageA). */
+export function nombreDealsEnCours(deals: DashboardDeal[], date: Date): number {
+  return deals.reduce((total, dashboardDeal) => {
+    const debut = dashboardDeal.deal.dateDebut;
+    const fin = dateFinDeal(dashboardDeal);
+    return total + (debut <= date && date < fin ? 1 : 0);
+  }, 0);
+}
+
 export function capitalRecupereA(deals: DashboardDeal[], date: Date): number {
   return arrondirMontant(
     deals.reduce((total, dashboardDeal) => {

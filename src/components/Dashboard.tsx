@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { differenceInCalendarDays } from "date-fns";
-import { CalendarClock, Check, Database, TrendingUp } from "lucide-react";
+import { CalendarClock, Check, ChevronDown, Plus, TrendingUp } from "lucide-react";
 import { formatDateFr } from "../utils/dateUtils";
-import { calculerSyntheseDashboard, calculerSynthesePourAnnee, DashboardDeal } from "../utils/dashboard";
-import { StorageMode } from "../db/secureStorage";
+import { calculerSyntheseDashboard, calculerSynthesePourAnnee, nombreDealsEnCours, DashboardDeal } from "../utils/dashboard";
 import { TrajectoireChart } from "./TrajectoireChart";
 import { VueAnnuelle } from "./VueAnnuelle";
 import { AnneeEnCours } from "./AnneeEnCours";
@@ -12,7 +11,7 @@ interface DashboardProps {
   deals: DashboardDeal[];
   suiviEncaissementsActif: boolean;
   onPointer: (echeanceId: string) => Promise<void>;
-  storageMode: StorageMode;
+  onAjouterDeal: () => void;
 }
 
 const formatMontant = new Intl.NumberFormat("fr-FR", {
@@ -34,7 +33,7 @@ function pourcentage(value: number): string {
   return formatPourcentage.format(value) + " %";
 }
 
-export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMode }: DashboardProps) {
+export function Dashboard({ deals, suiviEncaissementsActif, onPointer, onAjouterDeal }: DashboardProps) {
   const synthese = useMemo(
     () => calculerSyntheseDashboard(deals, new Date(), { suiviEncaissements: suiviEncaissementsActif, capitalEngageNet: true }),
     [deals, suiviEncaissementsActif],
@@ -46,7 +45,44 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
       }),
     [deals, suiviEncaissementsActif],
   );
-  const dealsActifs = deals.filter(({ statut }) => statut !== "termine").length;
+  const dealsEnCours = nombreDealsEnCours(deals, new Date());
+
+  if (deals.length === 0) {
+    return (
+      <section
+        aria-labelledby="dashboard-title"
+        className="mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-slate-50 to-white p-4 text-slate-900 shadow-sm dark:from-[#141d2e] dark:to-[#0e1422] dark:text-white"
+      >
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Portefeuille</p>
+            <h2 id="dashboard-title" className="mt-1 text-lg font-semibold">
+              Vue d’ensemble
+            </h2>
+          </div>
+          <div className="rounded-full bg-blue-100 p-2 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
+            <TrendingUp size={18} aria-hidden="true" />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center dark:border-white/10 dark:bg-black/10">
+          <p className="text-sm font-semibold">Bienvenue dans votre suivi</p>
+          <p className="mx-auto mt-2 max-w-xs text-xs text-slate-500 dark:text-slate-400">
+            Aucun deal enregistré pour l’instant. Ajoutez votre premier deal pour voir la valeur de votre portefeuille,
+            votre prochaine échéance et sa trajectoire.
+          </p>
+          <button
+            type="button"
+            onClick={onAjouterDeal}
+            className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors active:bg-emerald-700"
+          >
+            <Plus size={16} aria-hidden="true" />
+            Ajouter mon premier deal
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="dashboard-title" className="mx-4 mt-4 overflow-hidden rounded-2xl border border-blue-500/10 bg-gradient-to-b from-slate-50 to-white p-4 text-slate-900 shadow-sm dark:from-[#141d2e] dark:to-[#0e1422] dark:text-white">
@@ -56,18 +92,13 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
           <h2 id="dashboard-title" className="mt-1 text-lg font-semibold">
             Vue d’ensemble
           </h2>
-          <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-            <Database size={13} aria-hidden="true" />
-            {storageMode === "encrypted" ? "Données protégées par mot de passe" : "Données non protégées"}
-          </div>
         </div>
         <div className="rounded-full bg-blue-100 p-2 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
           <TrendingUp size={18} aria-hidden="true" />
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/5 dark:bg-black/10">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/5 dark:bg-black/10">
         <div className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Valeur actuelle</div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <strong className="text-2xl font-bold tabular-nums">{montant(synthese.valeurActuelle)}</strong>
@@ -75,26 +106,6 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
             +{pourcentage(synthese.performanceBrute)} · +{montant(synthese.interetsAcquis)}
           </span>
         </div>
-        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Rendement moyen pondéré : {pourcentage(synthese.rendementMoyenPondere)}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Indicateur label="Capital engagé" valeur={montant(synthese.capitalEngage)} />
-        <Indicateur label="Capital récupéré" valeur={montant(synthese.capitalRecupere)} />
-        <Indicateur label="Apports externes nets" valeur={montant(synthese.apportsExternesNets)} />
-        <Indicateur label="Gains acquis cumulés" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-700 dark:text-emerald-300" />
-        <Indicateur label="Gains futurs cumulés" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-700 dark:text-emerald-300" />
-        <Indicateur label="Total final prévu" valeur={montant(synthese.totalFinal)} couleur="text-purple-700 dark:text-purple-300" />
-      </div>
-
-      <AnneeEnCours synthese={syntheseAnneeEnCours} />
-
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-        <span>
-          {dealsActifs} deal{dealsActifs > 1 ? "s" : ""} actif{dealsActifs > 1 ? "s" : ""}
-        </span>
       </div>
 
       {synthese.prochaineEcheance && (
@@ -108,14 +119,59 @@ export function Dashboard({ deals, suiviEncaissementsActif, onPointer, storageMo
         />
       )}
 
-      <div className="mt-5 text-sm font-medium">Trajectoire du portefeuille</div>
-      <TrajectoireChart points={synthese.pointsCourbe} />
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/5 dark:bg-black/10">
+        <div className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Capital en cours</div>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <strong className="text-xl font-bold tabular-nums">{montant(synthese.capitalEngage)}</strong>
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {dealsEnCours} deal{dealsEnCours > 1 ? "s" : ""} en cours
+          </span>
+        </div>
+      </div>
 
-      <VueAnnuelle
-        deals={deals}
-        pointsCourbe={synthese.pointsCourbe}
-        suiviEncaissementsActif={suiviEncaissementsActif}
-      />
+      <details className="group mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/5 dark:bg-black/10">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          <span>
+            <span className="font-semibold">Voir l’analyse</span>
+            <span className="mt-0.5 block text-[11px] font-normal text-slate-500 dark:text-slate-400">
+              Indicateurs détaillés, graphique et détail par année
+            </span>
+          </span>
+          <ChevronDown
+            size={18}
+            aria-hidden="true"
+            className="shrink-0 text-slate-500 transition-transform group-open:rotate-180 dark:text-slate-400"
+          />
+        </summary>
+
+        <div className="mt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Indicateur label="Capital récupéré" valeur={montant(synthese.capitalRecupere)} />
+            <Indicateur label="Apports externes nets" valeur={montant(synthese.apportsExternesNets)} />
+            <Indicateur label="Gains acquis cumulés" valeur={montant(synthese.interetsAcquis)} couleur="text-emerald-700 dark:text-emerald-300" />
+            <Indicateur label="Gains futurs cumulés" valeur={montant(synthese.interetsFuturs)} couleur="text-emerald-700 dark:text-emerald-300" />
+            <Indicateur label="Total final prévu" valeur={montant(synthese.totalFinal)} couleur="text-purple-700 dark:text-purple-300" />
+          </div>
+
+          <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Rendement moyen pondéré :{" "}
+            <strong className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+              {pourcentage(synthese.rendementMoyenPondere)}
+            </strong>
+          </div>
+
+          <AnneeEnCours synthese={syntheseAnneeEnCours} />
+
+          <div className="mt-5 text-sm font-medium">Trajectoire du portefeuille</div>
+          <TrajectoireChart points={synthese.pointsCourbe} />
+
+          <VueAnnuelle
+            deals={deals}
+            pointsCourbe={synthese.pointsCourbe}
+            suiviEncaissementsActif={suiviEncaissementsActif}
+          />
+        </div>
+      </details>
     </section>
   );
 }
