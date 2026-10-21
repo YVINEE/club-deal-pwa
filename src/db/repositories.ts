@@ -43,12 +43,17 @@ export async function modifierDeal(deal: Deal): Promise<void> {
 
 export async function supprimerDeal(dealId: string): Promise<void> {
   const data = await lirePortefeuille();
-  if (data.deals.some((deal) => deal.reinvestissement?.sourceDealId === dealId)) {
-    throw new Error("Ce deal ne peut pas être supprimé tant que des réinvestissements en dépendent");
-  }
   const donnees = {
     ...data,
-    deals: data.deals.filter((deal) => deal.id !== dealId),
+    // Le capital réinvesti depuis le deal supprimé devient un apport neuf.
+    deals: data.deals
+      .filter((deal) => deal.id !== dealId)
+      .map((deal) => {
+        if (deal.reinvestissement?.sourceDealId !== dealId) return deal;
+        const apportNeuf = { ...deal };
+        delete apportNeuf.reinvestissement;
+        return apportNeuf;
+      }),
     prolongations: data.prolongations.filter((prolongation) => prolongation.dealId !== dealId),
     echeances: data.echeances.filter((echeance) => echeance.dealId !== dealId),
   };

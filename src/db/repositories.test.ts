@@ -43,11 +43,18 @@ describe("repositories et réinvestissements", () => {
     stockage.data = { deals: [], prolongations: [], echeances: [] };
   });
 
-  it("refuse la suppression d'une source encore utilisée", async () => {
-    const { source } = portefeuilleAvecReinvestissement();
+  it("supprime une source réinvestie et convertit le réinvestissement en apport neuf", async () => {
+    const { source, destination } = portefeuilleAvecReinvestissement();
+    const echeance: Echeance = { id: "e1", dealId: destination.id, date: destination.dateDebut, montant: 250, encaissee: true };
+    stockage.data.echeances = [echeance];
 
-    await expect(supprimerDeal(source.id)).rejects.toThrow("réinvestissements en dépendent");
-    expect(stockage.data.deals).toHaveLength(2);
+    await supprimerDeal(source.id);
+
+    const apportNeuf = { ...destination };
+    delete apportNeuf.reinvestissement;
+    expect(stockage.data.deals).toEqual([apportNeuf]);
+    expect(stockage.data.deals[0]).not.toHaveProperty("reinvestissement");
+    expect(stockage.data.echeances).toEqual([echeance]);
   });
 
   it("libère le capital après suppression du deal destination", async () => {

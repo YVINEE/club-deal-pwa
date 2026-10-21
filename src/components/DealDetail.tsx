@@ -63,6 +63,9 @@ export function DealDetail({
   }
 
   const { deal, statut } = dealInfo;
+  const dealsReinvestis = deals
+    .filter((candidate) => candidate.deal.reinvestissement?.sourceDealId === deal.id)
+    .map((candidate) => candidate.deal.nom);
   const sourceDealName = deal.reinvestissement
     ? deals.find((candidate) => candidate.deal.id === deal.reinvestissement?.sourceDealId)?.deal.nom
     : undefined;
@@ -98,7 +101,14 @@ export function DealDetail({
           <button onClick={onModifier} aria-label="Modifier" className="p-2">
             <Pencil size={18} aria-hidden="true" />
           </button>
-          <button onClick={() => setConfirmationSuppression(true)} aria-label="Supprimer" className="p-2">
+          <button
+            onClick={() => {
+              setErreurSuppression(null);
+              setConfirmationSuppression(true);
+            }}
+            aria-label="Supprimer"
+            className="p-2"
+          >
             <Trash2 size={18} aria-hidden="true" />
           </button>
         </div>
@@ -153,11 +163,24 @@ export function DealDetail({
               Cette action supprimera "{deal.nom}" ainsi que toutes ses échéances et prolongations. Cette action est
               irréversible.
             </AlertDialogDescription>
+            {dealsReinvestis.length > 0 && (
+              <p className="text-sm text-amber-700">
+                Le capital réinvesti dans {dealsReinvestis.map((nom) => `"${nom}"`).join(", ")} sera considéré comme un
+                apport neuf.
+              </p>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             {erreurSuppression && <p role="alert" className="text-sm text-red-600">{erreurSuppression}</p>}
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={gererSuppression} className="bg-red-600 text-white">
+            <AlertDialogAction
+              onClick={(event) => {
+                // Radix ferme la boîte au clic : la garder ouverte pour afficher un éventuel refus.
+                event.preventDefault();
+                void gererSuppression();
+              }}
+              className="bg-red-600 text-white"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -635,3 +635,75 @@ test("ajoute puis retire un réinvestissement depuis la modification", async ({ 
 
   await expect(page.getByText(/Capital réinvesti depuis/)).toHaveCount(0);
 });
+
+for (const { statut, nom, debut, filtre } of [
+  { statut: "terminé", nom: "Deal terminé à supprimer", debut: dateInputDansMois(-15), filtre: /^Terminés/ },
+  { statut: "actif", nom: "Deal actif à supprimer", debut: dateInputDansMois(1), filtre: /^Actifs/ },
+]) {
+  test(`supprime un deal ${statut}`, async ({ page }) => {
+    await openApp(page);
+    await openDeals(page);
+    await fillDeal(page, "Deal conservé");
+    await fillDeal(page, nom, debut);
+
+    const filtres = page.getByRole("group", { name: "Filtrer les deals" });
+    await filtres.getByRole("button", { name: filtre }).click();
+    await page.getByRole("heading", { name: nom, exact: true }).click();
+    await page.getByRole("button", { name: "Supprimer" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Supprimer" }).click();
+
+    await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+    await filtres.getByRole("button", { name: /^Tous/ }).click();
+    await expect(page.getByRole("heading", { name: "Deal conservé", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: nom, exact: true })).toHaveCount(0);
+  });
+}
+
+for (const chiffre of [false, true]) {
+  test(`supprime un deal terminé réinvesti et garde le deal dépendant comme apport neuf (${chiffre ? "chiffré" : "clair"})`, async ({ page }) => {
+    await openApp(page);
+    if (chiffre) {
+      await openSettings(page);
+      await page.getByRole("button", { name: "Mettre un mot de passe" }).click();
+      await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-e2e");
+      await page.getByLabel("Confirmer le mot de passe").fill("motdepasse-e2e");
+      await page.getByRole("button", { name: "Mettre le mot de passe" }).click();
+      await expect(page.getByText("Protégée", { exact: true })).toBeVisible();
+    }
+    await openDeals(page);
+    await fillDeal(page, "Deal source terminé", oldStartDate);
+    await fillDeal(page, "Deal réinvesti");
+    await page.getByRole("heading", { name: "Deal réinvesti", exact: true }).click();
+    await page.getByRole("button", { name: "Modifier" }).click();
+    await page.getByText("Réinvestir depuis un deal terminé", { exact: true }).locator("..").getByRole("combobox").first().click();
+    await page.getByRole("option", { name: /Deal source terminé/ }).click();
+    await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+    await page.getByRole("button", { name: "Retour" }).click();
+
+    const filtres = page.getByRole("group", { name: "Filtrer les deals" });
+    await filtres.getByRole("button", { name: /^Terminés/ }).click();
+    await page.getByRole("heading", { name: "Deal source terminé", exact: true }).click();
+    await page.getByRole("button", { name: "Supprimer" }).click();
+    const confirmation = page.getByRole("alertdialog");
+    await expect(
+      confirmation.getByText('Le capital réinvesti dans "Deal réinvesti" sera considéré comme un apport neuf.', { exact: true }),
+    ).toBeVisible();
+    await confirmation.getByRole("button", { name: "Supprimer" }).click();
+
+    await expect(page).toHaveURL(/\/club-deal-pwa\/deals$/);
+    await filtres.getByRole("button", { name: /^Tous/ }).click();
+    await expect(page.getByRole("heading", { name: "Deal source terminé", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Deal réinvesti", exact: true })).toBeVisible();
+    await expect(page.getByText(/Réinvesti depuis/)).toHaveCount(0);
+    await page.getByRole("heading", { name: "Deal réinvesti", exact: true }).click();
+    await expect(page.getByText(/Capital réinvesti depuis/)).toHaveCount(0);
+
+    if (chiffre) {
+      await page.reload();
+      await page.getByLabel("Mot de passe", { exact: true }).fill("motdepasse-e2e");
+      await page.getByRole("button", { name: "Déverrouiller" }).click();
+      await expect(page.getByRole("heading", { name: "Deal réinvesti", exact: true })).toBeVisible();
+      await expect(page.getByText(/Capital réinvesti depuis/)).toHaveCount(0);
+    }
+  });
+}
