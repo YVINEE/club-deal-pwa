@@ -59,6 +59,7 @@ test("crée, annule, modifie et revient à la liste des deals", async ({ page })
 
   await fillDeal(page);
   await page.getByRole("link", { name: "Tableau de bord" }).click();
+  await page.getByText("Voir l’analyse", { exact: true }).click();
   await expect(page.getByText(/Aujourd’hui ·/).first()).toBeVisible();
   await openDeals(page);
   await page.getByRole("heading", { name: dealName, exact: true }).click();
